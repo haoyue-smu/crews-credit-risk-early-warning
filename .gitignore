@@ -2,6 +2,16 @@
 __pycache__/
 *.py[codz]
 *$py.class
+*.py[cod]
+.venv/
+venv/
+.env
+.streamlit/secrets.toml
+.pytest_cache/
+.mypy_cache/
+.DS_Store
+.idea/
+.vscode/
 
 # C extensions
 *.so

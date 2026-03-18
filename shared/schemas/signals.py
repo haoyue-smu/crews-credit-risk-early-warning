@@ -66,6 +66,8 @@ class Signal(BaseModel):
 
     signal_id: str
     event_type: EventCategory
+    # Free-form, specific subtype (grows over time without enum changes).
+    event_subtype: str
     severity: Severity
     confidence: float = Field(ge=0.0, le=1.0)
     ambiguous: bool

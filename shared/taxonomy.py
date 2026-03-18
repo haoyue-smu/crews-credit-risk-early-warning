@@ -12,6 +12,7 @@ from enum import Enum
 class EventCategory(str, Enum):
     """High-level event category as defined in the project reference."""
 
+    # High-level draft categories (team-wide taxonomy)
     management_governance = "management_governance"
     legal_regulatory = "legal_regulatory"
     financial_distress_signals = "financial_distress_signals"

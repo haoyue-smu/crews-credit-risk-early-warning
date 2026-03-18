@@ -92,6 +92,7 @@ class TestSISSharedSchemas(unittest.TestCase):
         signal = Signal(
             signal_id="sig_001",
             event_type=EventCategory.management_governance,
+            event_subtype="ceo_departure",
             severity=Severity.high,
             confidence=0.85,
             ambiguous=False,
@@ -117,6 +118,7 @@ class TestSISSharedSchemas(unittest.TestCase):
             Signal(
                 signal_id="sig_001",
                 event_type=EventCategory.management_governance,
+                event_subtype="ceo_departure",
                 severity=Severity.high,
                 confidence=0.85,
                 ambiguous=False,
@@ -139,6 +141,7 @@ class TestSISSharedSchemas(unittest.TestCase):
         signal = Signal(
             signal_id="sig_001",
             event_type=EventCategory.management_governance,
+            event_subtype="ceo_departure",
             severity=Severity.high,
             confidence=0.85,
             ambiguous=False,
@@ -172,6 +175,7 @@ class TestSISSharedSchemas(unittest.TestCase):
         signal = Signal(
             signal_id="sig_001",
             event_type=EventCategory.management_governance,
+            event_subtype="ceo_departure",
             severity=Severity.high,
             confidence=0.85,
             ambiguous=False,

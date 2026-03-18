@@ -1,0 +1,15 @@
+# UBS Credit Risk Early Warning System (SMU IS4000)
+
+## Architecture
+Multi-agent pipeline: `intake_case → FIS → RS → SQ → SIS → FRD`
+
+## Tech Stack
+Python 3.11+, FastAPI, LangGraph, LangExtract (`google/langextract`), Gemini 2.5 Flash, Pydantic, PostgreSQL
+
+## My Scope
+SIS (Signal Intelligence Subgraph)
+
+## Conventions
+- Type hints everywhere
+- Pydantic models for all data contracts
+- Docstrings on public functions

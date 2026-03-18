@@ -74,10 +74,8 @@ class Signal(BaseModel):
     resolution_path: ResolutionPath = ResolutionPath.auto
     review_status: Optional[ReviewStatus] = None
 
-    # Traceability: SIS uses LangExtract grounding
-    char_interval: CharInterval
-
-    evidence: list[Evidence] = Field(min_length=1)
+    # Traceability: each Evidence carries its own LangExtract grounding interval.
+    evidence: list[Evidence] = Field(default_factory=list)
 
     model_config = {"extra": "ignore"}
 

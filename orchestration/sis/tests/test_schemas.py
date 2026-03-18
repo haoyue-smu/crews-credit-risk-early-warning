@@ -98,7 +98,6 @@ class TestSISSharedSchemas(unittest.TestCase):
             conflict_status=ConflictStatus.no_conflict,
             resolution_path=ResolutionPath.auto,
             review_status=None,
-            char_interval=ci,
             evidence=[evidence],
         )
         self.assertEqual(signal.signal_id, "sig_001")
@@ -124,7 +123,6 @@ class TestSISSharedSchemas(unittest.TestCase):
                 conflict_status=ConflictStatus.no_conflict,
                 resolution_path=ResolutionPath.auto,
                 review_status=ReviewStatus.verified,
-                char_interval=ci,
                 evidence=[evidence],
             )
 
@@ -147,7 +145,6 @@ class TestSISSharedSchemas(unittest.TestCase):
             conflict_status=ConflictStatus.no_conflict,
             resolution_path=ResolutionPath.auto,
             review_status=None,
-            char_interval=ci,
             evidence=[evidence],
         )
         metadata = SISMetadata(
@@ -181,7 +178,6 @@ class TestSISSharedSchemas(unittest.TestCase):
             conflict_status=ConflictStatus.no_conflict,
             resolution_path=ResolutionPath.auto,
             review_status=None,
-            char_interval=ci,
             evidence=[evidence],
         )
 

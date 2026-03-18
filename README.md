@@ -72,7 +72,7 @@ You should see the FastAPI interactive API documentation.
 
 Open a new terminal, activate the virtual environment again, then run:
 
-streamlit run app/main.py
+streamlit run frontend/app/main.py
 
 The Streamlit interface will open at:
 

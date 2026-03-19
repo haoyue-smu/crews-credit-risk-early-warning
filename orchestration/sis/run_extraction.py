@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 from typing import Any, Iterable
+import time
 
 from dotenv import load_dotenv
 
@@ -99,17 +100,24 @@ def main() -> None:
         label = path.name
         print(f"\nValid document: {label} (company_id={doc.company_id}, source_type={doc.source_type})")
 
-        result = lx.extract(
-            text_or_documents=doc.full_text,
-            prompt_description=EXTRACTION_PROMPT,
-            examples=EXAMPLES,
-            model_id="gemini-2.5-flash",
-            extraction_passes=2,
-            max_workers=5,
-        )
+        try:
+            result = lx.extract(
+                text_or_documents=doc.full_text,
+                prompt_description=EXTRACTION_PROMPT,
+                examples=EXAMPLES,
+                model_id="gemini-2.5-flash",
+                extraction_passes=1,
+                max_workers=1,
+            )
 
-        results.append(result)
-        _print_raw_result(label, result)
+            results.append(result)
+            _print_raw_result(label, result)
+        except Exception as exc:
+            print(f"Extraction failed for {label}: {exc!r}")
+            continue
+
+        print("Waiting 15s for rate limit...")
+        time.sleep(15)
 
     # Persist results for interactive visualization / debugging.
     try:

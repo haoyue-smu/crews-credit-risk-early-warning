@@ -96,6 +96,41 @@ def get_sis_example_data() -> list["lx.data.ExampleData"]:
         ],
     )
 
+    # Example C (doc_004): company IR statement — denials / reaffirmations as positive_signals.
+    text_004 = _load_hyflux_doc_full_text("doc_004_company_statement_denial.json")
+    denial_restructuring_text = (
+        "The company states categorically that Hyflux has not filed any formal application for "
+        "court-supervised debt restructuring with the Singapore High Court, and that any suggestion "
+        "that such a filing has been made is inaccurate."
+    )
+    operations_normal_text = (
+        "Management reports that operations across Hyflux's desalination, water treatment, and related "
+        "energy activities are running normally, with facilities meeting service commitments and "
+        "commercial schedules."
+    )
+
+    example_c = lx.data.ExampleData(
+        text=text_004,
+        extractions=[
+            lx.data.Extraction(
+                extraction_class=EventCategory.positive_signals.value,
+                extraction_text=denial_restructuring_text,
+                attributes={
+                    "event_subtype": "denial_of_debt_restructuring",
+                    "severity": Severity.positive.value,
+                },
+            ),
+            lx.data.Extraction(
+                extraction_class=EventCategory.positive_signals.value,
+                extraction_text=operations_normal_text,
+                attributes={
+                    "event_subtype": "operations_reaffirmation",
+                    "severity": Severity.positive.value,
+                },
+            ),
+        ],
+    )
+
     # Keep extractions in the order they appear in each example document.
-    return [example_a, example_b]
+    return [example_a, example_b, example_c]
 

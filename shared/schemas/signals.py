@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -78,6 +78,10 @@ class Signal(BaseModel):
 
     # Traceability: each Evidence carries its own LangExtract grounding interval.
     evidence: list[Evidence] = Field(default_factory=list)
+
+    # evidence_gate: routing intent for FRD / RS (Scheme A: all signals still delivered to FRD).
+    evidence_route: Literal["frd_direct", "targeted_retrieval"] = "frd_direct"
+    evidence_notes: list[str] = Field(default_factory=list)
 
     model_config = {"extra": "ignore"}
 

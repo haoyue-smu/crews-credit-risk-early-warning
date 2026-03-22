@@ -3,16 +3,23 @@
 Run with:
     python -m orchestration.sis.run_extraction
 
-This is intentionally simple and suitable for Phase 2 development/testing.
+Uses document-level ``ThreadPoolExecutor(max_workers=10)`` plus per-call
+``extraction_passes=2`` and ``max_workers=10`` for LangExtract/Gemini
+(Paid Tier 1–appropriate throughput).
+
+Pass ``--use-cache`` to skip API calls and replay cached ``extraction_results.jsonl``
+(``--no-cache`` forces a fresh run).
 """
 
 from __future__ import annotations
 
 import json
 import os
+import sys
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any, Iterable
-import time
 
 from dotenv import load_dotenv
 
@@ -68,8 +75,46 @@ def _iter_hyflux_documents(hyflux_dir: Path) -> Iterable[tuple[Path, DocumentInp
         yield path, doc
 
 
+def _run_cache_mode(hyflux_dir: Path, output_path: Path) -> None:
+    """Print cached JSONL the same way as a live run; do not call the API or save."""
+    if not output_path.exists():
+        print(f"No cache file at {output_path}; run without --use-cache first.")
+        return
+
+    text_to_label: dict[str, str] = {}
+    for path, doc in _iter_hyflux_documents(hyflux_dir):
+        text_to_label[doc.full_text] = path.name
+
+    t0 = time.perf_counter()
+    with output_path.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            payload: dict[str, Any] = json.loads(line)
+            text = str(payload.get("text", ""))
+            label = text_to_label.get(text) or str(payload.get("document_id", "unknown"))
+            _print_raw_result(label, payload)
+
+    elapsed = time.perf_counter() - t0
+    print(f"\nTotal wall-clock time (cache replay): {elapsed:.1f}s")
+
+
 def main() -> None:
     """Execute local extraction for Hyflux documents."""
+    project_root = Path(__file__).resolve().parents[2]
+    hyflux_dir = project_root / "data" / "local" / "hyflux"
+    output_path = hyflux_dir / "extraction_results.jsonl"
+
+    args = sys.argv[1:]
+    use_cache = "--use-cache" in args
+    force_recompute = "--no-cache" in args
+
+    if use_cache and not force_recompute:
+        print(f"Using cached extraction results from {output_path} (skip API).")
+        _run_cache_mode(hyflux_dir, output_path)
+        return
+
     try:
         import langextract as lx  # type: ignore
     except ModuleNotFoundError:
@@ -78,10 +123,6 @@ def main() -> None:
             "`pip install langextract`"
         )
         return
-
-    project_root = Path(__file__).resolve().parents[2]
-    hyflux_dir = project_root / "data" / "local" / "hyflux"
-    output_path = hyflux_dir / "extraction_results.jsonl"
 
     load_dotenv()
     gemini_api_key = os.getenv("GEMINI_API_KEY")
@@ -92,32 +133,62 @@ def main() -> None:
     # LangExtract uses LANGEXTRACT_API_KEY as the unified environment variable.
     os.environ["LANGEXTRACT_API_KEY"] = gemini_api_key
 
-    # Few-shot examples + prompt description.
     EXAMPLES = get_sis_example_data()
+    doc_items: list[tuple[Path, DocumentInput]] = list(_iter_hyflux_documents(hyflux_dir))
 
-    results: list[Any] = []
-    for path, doc in _iter_hyflux_documents(hyflux_dir):
+    def _extract_one(idx: int, path: Path, doc: DocumentInput) -> tuple[int, str, Any, float, Exception | None]:
+        """Run LangExtract for one document; return (index, label, result, seconds, error)."""
         label = path.name
-        print(f"\nValid document: {label} (company_id={doc.company_id}, source_type={doc.source_type})")
-
+        t0 = time.perf_counter()
         try:
             result = lx.extract(
                 text_or_documents=doc.full_text,
                 prompt_description=EXTRACTION_PROMPT,
                 examples=EXAMPLES,
                 model_id="gemini-2.5-flash",
-                extraction_passes=1,
-                max_workers=1,
+                extraction_passes=2,
+                max_workers=10,
             )
-
-            results.append(result)
-            _print_raw_result(label, result)
+            elapsed = time.perf_counter() - t0
+            return (idx, label, result, elapsed, None)
         except Exception as exc:
-            print(f"Extraction failed for {label}: {exc!r}")
-            continue
+            elapsed = time.perf_counter() - t0
+            return (idx, label, None, elapsed, exc)
 
-        print("Waiting 15s for rate limit...")
-        time.sleep(15)
+    results: list[Any] = []
+    batch_t0 = time.perf_counter()
+
+    if not doc_items:
+        print(f"No *.json documents found under {hyflux_dir}")
+        print(f"\nTotal wall-clock time: {time.perf_counter() - batch_t0:.1f}s")
+        return
+
+    for path, doc in doc_items:
+        print(
+            f"\nValid document: {path.name} (company_id={doc.company_id}, source_type={doc.source_type})"
+        )
+
+    print(f"\nExtracting {len(doc_items)} documents with up to 10 parallel workers...")
+
+    completed_rows: list[tuple[int, str, Any, float, Exception | None]] = []
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_idx = {
+            executor.submit(_extract_one, idx, path, doc): idx
+            for idx, (path, doc) in enumerate(doc_items)
+        }
+        for fut in as_completed(future_to_idx):
+            completed_rows.append(fut.result())
+
+    for idx, label, result, elapsed, err in sorted(completed_rows, key=lambda r: r[0]):
+        if err is not None:
+            print(f"{label} completed in {elapsed:.1f}s (failed: {err!r})")
+            continue
+        print(f"{label} completed in {elapsed:.1f}s")
+        results.append(result)
+        _print_raw_result(label, result)
+
+    batch_elapsed = time.perf_counter() - batch_t0
+    print(f"\nTotal wall-clock time: {batch_elapsed:.1f}s")
 
     # Persist results for interactive visualization / debugging.
     try:
@@ -133,4 +204,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List
 
@@ -17,23 +18,55 @@ from shared.schemas.documents import DocumentInput
 from shared.schemas.signals import Signal
 
 
-def _configure_gemini() -> "object":
-    """Configure the Gemini client from environment variables."""
+_tls = threading.local()
 
+
+def _require_gemini_api_key() -> None:
+    """Fail fast if verification cannot authenticate (same env pattern as extraction)."""
+
+    load_dotenv()
+    if not os.getenv("GEMINI_API_KEY"):
+        raise RuntimeError("Missing GEMINI_API_KEY in environment/.env for verification.")
+
+
+def _thread_verify_client() -> Any:
+    """One ``google.genai`` client per worker thread (avoids shared-client issues)."""
+
+    c = getattr(_tls, "client", None)
+    if c is not None:
+        return c
     load_dotenv()
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise RuntimeError("Missing GEMINI_API_KEY in environment/.env for verification.")
-
     try:
-        import google.generativeai as genai  # type: ignore
+        from google import genai  # type: ignore
     except ModuleNotFoundError as exc:  # pragma: no cover
         raise RuntimeError(
-            "google-generativeai is not installed. Install it with `pip install google-generativeai`."
+            "google-genai is not installed. Install it with `pip install google-genai`."
         ) from exc
+    _tls.client = genai.Client(api_key=api_key)
+    return _tls.client
 
-    genai.configure(api_key=api_key)
-    return genai
+
+def _response_text(response: Any) -> str:
+    t = getattr(response, "text", None)
+    if t:
+        return str(t)
+    cands = getattr(response, "candidates", None) or []
+    for cand in cands:
+        content = getattr(cand, "content", None)
+        parts = getattr(content, "parts", None) if content is not None else None
+        if not parts:
+            continue
+        chunks: List[str] = []
+        for p in parts:
+            txt = getattr(p, "text", None)
+            if txt:
+                chunks.append(str(txt))
+        if chunks:
+            return "".join(chunks)
+    return ""
 
 
 _CONTEXT_PAD_CHARS = 200
@@ -87,10 +120,8 @@ def _build_verification_prompt(
 def _verify_one_signal(
     signal: Signal,
     documents_by_id: Dict[str, DocumentInput],
-    genai: Any,
 ) -> Dict[str, Any]:
-    """Run Gemini verification for a single signal (fresh model per call for thread safety)."""
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    """Run Gemini verification for a single signal (thread-local client per worker)."""
     decision = "error"
     original_confidence = float(signal.confidence)
     adjusted_confidence = original_confidence
@@ -128,8 +159,13 @@ def _verify_one_signal(
     )
 
     try:
-        response = model.generate_content(prompt)
-        text = response.text or ""
+        client = _thread_verify_client()
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+            config={"temperature": 0},
+        )
+        text = _response_text(response) or ""
     except Exception as exc:  # pragma: no cover - network/LLM errors
         print(f"[parallel_verify_signals] Gemini call failed for {signal.signal_id}: {exc!r}")
         return {
@@ -193,18 +229,18 @@ def parallel_verify_signals(
     """
 
     documents_by_id: Dict[str, DocumentInput] = {d.document_id: d for d in documents}
-    genai = _configure_gemini()
+    _require_gemini_api_key()
 
     if max_workers < 1:
         max_workers = 1
 
     if len(signals) <= 1 or max_workers == 1:
-        return [_verify_one_signal(s, documents_by_id, genai) for s in signals]
+        return [_verify_one_signal(s, documents_by_id) for s in signals]
 
     results_by_index: Dict[int, Dict[str, Any]] = {}
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_idx = {
-            executor.submit(_verify_one_signal, sig, documents_by_id, genai): i
+            executor.submit(_verify_one_signal, sig, documents_by_id): i
             for i, sig in enumerate(signals)
         }
         for fut in as_completed(future_to_idx):

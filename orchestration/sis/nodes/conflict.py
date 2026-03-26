@@ -273,6 +273,7 @@ def _call_gemini_pair(sa: Signal, sb: Signal) -> Tuple[str, str]:
     response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt,
+        config={"temperature": 0},
     )
     raw = _response_text(response)
     return _parse_llm_json(raw)
@@ -376,7 +377,7 @@ def conflict_resolution(
     documents: List[DocumentInput],
     *,
     max_workers: int = 10,
-) -> Tuple[List[Dict[str, Any]], Dict[str, int]]:
+) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     """Resolve conflicts: Stage 1 dedup, NLI screen, Gemini confirm contradictions/duplicates.
 
     Args:
@@ -386,7 +387,8 @@ def conflict_resolution(
 
     Returns:
         (updated_items, summary) including nli_pairs_screened, nli_contradictions_detected,
-        gemini_confirmed, plus legacy keys.
+        gemini_confirmed, contradiction_explanations (Gemini-confirmed contradiction edges),
+        plus legacy numeric counters.
     """
     total_input = len(verification_items)
 
@@ -415,6 +417,7 @@ def conflict_resolution(
     nli_contradictions_detected = 0
     gemini_confirmed = 0
     contradictions_found = 0
+    contradiction_explanations: List[Dict[str, str]] = []
 
     nli_candidate_pairs: List[Tuple[int, int, float]] = []
 
@@ -484,13 +487,22 @@ def conflict_resolution(
             for fut in as_completed(futs):
                 gemini_results.append(fut.result())
 
-        for ia, ib, rel, _expl in gemini_results:
+        for ia, ib, rel, expl in gemini_results:
             if rel == "duplicate":
                 duplicate_edges.append((ia, ib))
             elif rel == "contradiction":
                 contradiction_edges.append((ia, ib))
                 gemini_confirmed += 1
                 contradictions_found += 1
+                sa = working[ia]["signal"]
+                sb = working[ib]["signal"]
+                contradiction_explanations.append(
+                    {
+                        "signal_id_a": sa.signal_id,
+                        "signal_id_b": sb.signal_id,
+                        "explanation": expl,
+                    }
+                )
             # related / unrelated: NLI false positive — leave signals as-is (no_conflict)
 
     if duplicate_edges or contradiction_edges:
@@ -513,5 +525,6 @@ def conflict_resolution(
         "nli_pairs_screened": nli_pairs_screened,
         "nli_contradictions_detected": nli_contradictions_detected,
         "gemini_confirmed": gemini_confirmed,
+        "contradiction_explanations": contradiction_explanations,
     }
     return working, summary

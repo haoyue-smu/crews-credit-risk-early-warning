@@ -1,6 +1,5 @@
 {"signal_id": "doc_001_1_0", "document_id": "doc_001", "status": "valid"}
 {"signal_id": "doc_001_2_1", "document_id": "doc_001", "status": "valid"}
-{"signal_id": "doc_001_3_2", "document_id": "doc_001", "status": "valid"}
 {"signal_id": "doc_001_1_0", "document_id": "doc_001", "status": "valid"}
 {"signal_id": "doc_001_2_1", "document_id": "doc_001", "status": "valid"}
 {"signal_id": "doc_001_3_2", "document_id": "doc_001", "status": "valid"}
@@ -8,6 +7,7 @@
 {"signal_id": "doc_001_5_4", "document_id": "doc_001", "status": "valid"}
 {"signal_id": "doc_001_6_5", "document_id": "doc_001", "status": "valid"}
 {"signal_id": "doc_001_7_6", "document_id": "doc_001", "status": "valid"}
+{"signal_id": "doc_001_3_2", "document_id": "doc_001", "status": "valid"}
 {"signal_id": "doc_002_1_0", "document_id": "doc_002", "status": "valid"}
 {"signal_id": "doc_002_2_1", "document_id": "doc_002", "status": "valid"}
 {"signal_id": "doc_002_3_2", "document_id": "doc_002", "status": "valid"}

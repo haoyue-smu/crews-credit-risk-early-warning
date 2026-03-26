@@ -14,6 +14,8 @@ from shared.schemas.documents import DocumentInput
 from shared.schemas.signals import CharInterval, Evidence, Signal
 from shared.taxonomy import EventCategory, Severity
 
+EXTRACTION_TEMPERATURE = 0
+
 
 def _extractions_from_lx_result(result: Any) -> list[Any]:
     """Best-effort discovery of the extractions list from a LangExtract result."""
@@ -40,37 +42,59 @@ def _signals_from_lx_result(doc: DocumentInput, result: Any) -> list[Signal]:
     """Map LangExtract output for one document to ``Signal`` instances."""
     signals: list[Signal] = []
     for ex in _extractions_from_lx_result(result):
-        if not isinstance(ex, dict):
-            continue
-        extraction_class = ex.get("extraction_class")
-        attributes = ex.get("attributes", {}) or {}
-        ci = ex.get("char_interval", {}) or {}
+        # LangExtract may return each extraction either as a plain dict
+        # (when using JSON-serialized outputs) or as an Extraction(...) object
+        # (when using in-memory results from `lx.extract`).
+        if isinstance(ex, dict):
+            extraction_class = ex.get("extraction_class")
+            attributes = ex.get("attributes", {}) or {}
+            ci = ex.get("char_interval", {}) or {}
+            extraction_text = ex.get("extraction_text", "") or ""
+            extraction_index = ex.get("extraction_index")
+            group_index = ex.get("group_index")
+            start_pos = ci.get("start_pos")
+            end_pos = ci.get("end_pos")
+        else:
+            extraction_class = getattr(ex, "extraction_class", None)
+            attributes = getattr(ex, "attributes", {}) or {}
+            extraction_text = getattr(ex, "extraction_text", "") or ""
+            extraction_index = getattr(ex, "extraction_index", None)
+            group_index = getattr(ex, "group_index", None)
+            char_interval_obj = getattr(ex, "char_interval", None)
+            start_pos = getattr(char_interval_obj, "start_pos", None) if char_interval_obj is not None else None
+            end_pos = getattr(char_interval_obj, "end_pos", None) if char_interval_obj is not None else None
+
         if extraction_class is None:
             continue
+
         try:
-            event_type = EventCategory(extraction_class)
+            event_type = EventCategory(str(extraction_class))
             severity = Severity(attributes["severity"])
         except Exception:
             continue
+
         event_subtype = str(attributes.get("event_subtype", ""))
+
         try:
             char_interval = CharInterval(
-                start=int(ci["start_pos"]),
-                end=int(ci["end_pos"]),
+                start=int(start_pos),
+                end=int(end_pos),
             )
         except Exception:
             continue
+
         evidence = Evidence(
             source_name=doc.source_name,
             document_id=doc.document_id,
             date=doc.published_date,
-            snippet=str(ex.get("extraction_text", "")),
+            snippet=str(extraction_text),
             char_interval=char_interval,
             source_quality=doc.source_quality_score,
         )
+
         signals.append(
             Signal(
-                signal_id=f"{doc.document_id}_{ex.get('extraction_index')}_{ex.get('group_index')}",
+                signal_id=f"{doc.document_id}_{extraction_index}_{group_index}",
                 event_type=event_type,
                 event_subtype=event_subtype,
                 severity=severity,
@@ -85,7 +109,7 @@ def _signals_from_lx_result(doc: DocumentInput, result: Any) -> list[Signal]:
 def parallel_extract_signals(documents: list[DocumentInput]) -> list[Signal]:
     """Extract signals from documents (parallelized LLM extraction).
 
-    Uses Gemini Paid Tier 1–friendly settings: ``extraction_passes=2``,
+    Uses Gemini Paid Tier 1–friendly settings: ``extraction_passes=1``,
     ``max_workers=10`` per LangExtract call (no artificial throttling).
 
     Args:
@@ -115,14 +139,30 @@ def parallel_extract_signals(documents: list[DocumentInput]) -> list[Signal]:
     all_signals: list[Signal] = []
 
     for doc in documents:
-        result = lx.extract(
+        extract_kwargs = dict(
             text_or_documents=doc.full_text,
             prompt_description=EXTRACTION_PROMPT,
             examples=examples,
             model_id="gemini-2.5-flash",
-            extraction_passes=2,
+            extraction_passes=1,
             max_workers=10,
         )
+        try:
+            # Preferred for LangExtract versions that forward Gemini generation config.
+            result = lx.extract(
+                **extract_kwargs,
+                generation_config={"temperature": EXTRACTION_TEMPERATURE},
+            )
+        except TypeError:
+            try:
+                # Some versions may accept direct `temperature`.
+                result = lx.extract(
+                    **extract_kwargs,
+                    temperature=EXTRACTION_TEMPERATURE,
+                )
+            except TypeError:
+                # Backward-compatible fallback if temperature kwargs are unsupported.
+                result = lx.extract(**extract_kwargs)
         all_signals.extend(_signals_from_lx_result(doc, result))
 
     return all_signals

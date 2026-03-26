@@ -138,7 +138,7 @@ def _item_from_record(rec: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def save_conflict_results(output_path: Path, items: List[Dict[str, Any]], summary: Dict[str, int]) -> None:
+def save_conflict_results(output_path: Path, items: List[Dict[str, Any]], summary: Dict[str, Any]) -> None:
     payload = {"_conflict_summary": True, **summary}
     with output_path.open("w", encoding="utf-8") as f:
         f.write(json.dumps(payload) + "\n")
@@ -146,7 +146,7 @@ def save_conflict_results(output_path: Path, items: List[Dict[str, Any]], summar
             f.write(json.dumps(_item_to_record(it)) + "\n")
 
 
-def load_conflict_cache(output_path: Path) -> tuple[Dict[str, int], List[Dict[str, Any]]] | None:
+def load_conflict_cache(output_path: Path) -> tuple[Dict[str, Any], List[Dict[str, Any]]] | None:
     if not output_path.exists():
         return None
     lines = [ln for ln in output_path.read_text(encoding="utf-8").splitlines() if ln.strip()]

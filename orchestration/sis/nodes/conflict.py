@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 
 from shared.schemas.documents import DocumentInput
 from shared.schemas.signals import ConflictStatus, Evidence, Signal
+from shared.taxonomy import EventCategory, Severity
 
 NLI_MODEL_NAME = "cross-encoder/nli-deberta-v3-base"
 # Logits order: contradiction (0), entailment (1), neutral (2) for this checkpoint.
@@ -372,6 +373,46 @@ def _apply_duplicate_and_contradiction_edges(
     return working, duplicates_merged_delta
 
 
+def _apply_positive_auto_ambiguous_post(
+    working: List[Dict[str, Any]],
+    docs_by_id: Dict[str, DocumentInput],
+) -> int:
+    """Mark non-disputed positive signals ambiguous when a cross-doc high-severity negative exists (same company)."""
+
+    high_negatives: List[Signal] = []
+    for it in working:
+        s: Signal = it["signal"]
+        if s.event_type != EventCategory.positive_signals and s.severity == Severity.high:
+            high_negatives.append(s)
+
+    marked = 0
+    for it in working:
+        s: Signal = it["signal"]
+        if s.event_type != EventCategory.positive_signals:
+            continue
+        if s.conflict_status == ConflictStatus.disputed:
+            continue
+        pos_company = _company_id_for_signal(s, docs_by_id)
+        pos_doc = _primary_document_id(s)
+        if pos_company is None or not pos_doc:
+            continue
+        found_cross_doc = False
+        for n in high_negatives:
+            if _company_id_for_signal(n, docs_by_id) != pos_company:
+                continue
+            nd = _primary_document_id(n)
+            if not nd or nd == pos_doc:
+                continue
+            found_cross_doc = True
+            break
+        if not found_cross_doc:
+            continue
+        if not s.ambiguous:
+            it["signal"] = s.model_copy(deep=True, update={"ambiguous": True})
+            marked += 1
+    return marked
+
+
 def conflict_resolution(
     verification_items: List[Dict[str, Any]],
     documents: List[DocumentInput],
@@ -511,6 +552,12 @@ def conflict_resolution(
         )
         duplicates_merged += dm
 
+    positive_auto_ambiguous = _apply_positive_auto_ambiguous_post(working, docs_by_id)
+    print(
+        f"[POST] Marked {positive_auto_ambiguous} positive signals as ambiguous "
+        "(high-severity negative signals exist)"
+    )
+
     disputed_count = sum(
         1 for it in working if it["signal"].conflict_status == ConflictStatus.disputed
     )
@@ -522,6 +569,7 @@ def conflict_resolution(
         "duplicates_merged": duplicates_merged,
         "contradictions_found": contradictions_found,
         "disputed": disputed_count,
+        "positive_auto_ambiguous": positive_auto_ambiguous,
         "nli_pairs_screened": nli_pairs_screened,
         "nli_contradictions_detected": nli_contradictions_detected,
         "gemini_confirmed": gemini_confirmed,

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<IncomeStatement>
+    <Revenue>5000000</Revenue>
+    <CostOfGoodsSold>2000000</CostOfGoodsSold>
+    <GrossProfit>3000000</GrossProfit>
+    <OperatingExpenses>1000000</OperatingExpenses>
+    <NetIncome>2000000</NetIncome>
+</IncomeStatement>

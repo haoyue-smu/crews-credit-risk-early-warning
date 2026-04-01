@@ -1,0 +1,111 @@
+"""Prompt template for FRD LLM report generation (Phase 3)."""
+
+from __future__ import annotations
+
+import json
+from typing import Any, Dict, List, Optional
+
+REPORT_SYSTEM_PROMPT = """You are a senior credit risk analyst at a global bank writing an internal early warning report for the credit committee.
+
+Hard rules:
+- The traffic light (red / amber / green) has already been determined by a deterministic scoring system. Do NOT change, override, or second-guess that outcome — only explain it and interpret the evidence.
+- Output ONLY valid JSON. No markdown code fences, no preamble, no text before or after the JSON object.
+- Reference specific evidence snippets and source names from the context when you make factual claims.
+- Be concise: each section value should be roughly 2–5 sentences (you may use bullet lines inside the string for key_risk_findings).
+- Use professional credit risk terminology suitable for a bank credit committee.
+
+Your response must be a single JSON object with exactly these string keys:
+- "executive_summary": 2–3 sentences. State the traffic light, the primary reasons, and the recommended stance or next step.
+- "key_risk_findings": 3–5 bullet points (as one string, use newlines and leading "- ") for the most important risks, ordered by severity; cite evidence.
+- "financial_health_assessment": 2–3 sentences on Z-Score zone, trend, and peer context; if no financial data, say analysis was not available.
+- "signal_details": For each event category where criteria were met (or strongly supported by signals), 1–2 sentences; group by theme (financial distress, management, reputation, etc.).
+- "disputed_and_ambiguous": Describe disputed or ambiguous signals and why they need analyst attention; if none, state exactly: No disputed signals detected.
+- "data_quality_notes": Staleness, missing sources, coverage, approximate share of disputed sources if inferable from context.
+- "recommended_actions": 2–3 concrete actions for the analyst.
+"""
+
+
+def _severity_rank(severity: Any) -> int:
+    order = {"high": 0, "medium": 1, "low": 2, "positive": 3}
+    return order.get(str(severity or "").lower(), 9)
+
+
+def _top_signals_for_prompt(signals: List[dict], limit: int = 15) -> List[dict]:
+    ranked = sorted(
+        signals,
+        key=lambda s: (_severity_rank(s.get("severity")), -float(s.get("confidence") or 0.0)),
+    )
+    out: List[dict] = []
+    for s in ranked[:limit]:
+        ev_list = s.get("evidence") or []
+        ev0: Dict[str, Any] = ev_list[0] if isinstance(ev_list, list) and ev_list else {}
+        snippet = str(ev0.get("snippet", "") or "")
+        if len(snippet) > 200:
+            snippet = snippet[:200] + "…"
+        out.append(
+            {
+                "event_type": s.get("event_type"),
+                "event_subtype": s.get("event_subtype"),
+                "severity": s.get("severity"),
+                "confidence": s.get("confidence"),
+                "ambiguous": s.get("ambiguous"),
+                "conflict_status": s.get("conflict_status"),
+                "source_name": ev0.get("source_name", "unknown"),
+                "snippet": snippet,
+            }
+        )
+    return out
+
+
+def build_report_prompt(
+    risk_score: dict,
+    signals: List[dict],
+    financial_profile: Optional[dict],
+    documents_processed: int,
+) -> str:
+    """Build the user context block appended after REPORT_SYSTEM_PROMPT."""
+
+    criteria = risk_score.get("criteria_results") or []
+    met_criteria = [c for c in criteria if c.get("met")]
+    unmet_criteria = [c for c in criteria if not c.get("met")]
+
+    top_sigs = _top_signals_for_prompt(signals, 15)
+
+    fin_block = (
+        json.dumps(financial_profile, indent=2, default=str)
+        if financial_profile is not None
+        else "No financial profile was supplied for this assessment."
+    )
+
+    lines = [
+        "--- SCORING OUTPUT (AUTHORITATIVE FOR TRAFFIC LIGHT) ---",
+        json.dumps(
+            {
+                "company_id": risk_score.get("company_id"),
+                "traffic_light": risk_score.get("traffic_light"),
+                "high_criteria_met": risk_score.get("high_criteria_met"),
+                "medium_criteria_met": risk_score.get("medium_criteria_met"),
+                "low_criteria_met": risk_score.get("low_criteria_met"),
+                "has_mitigating_factors": risk_score.get("has_mitigating_factors"),
+                "mitigating_details": risk_score.get("mitigating_details"),
+                "flags": risk_score.get("flags"),
+                "financial_data_available": risk_score.get("financial_data_available"),
+            },
+            indent=2,
+        ),
+        "",
+        "--- CRITERIA (MET) ---",
+        json.dumps(met_criteria, indent=2, default=str),
+        "",
+        "--- CRITERIA (NOT MET) ---",
+        json.dumps(unmet_criteria, indent=2, default=str),
+        "",
+        f"--- TOP SIGNALS (max 15, severity then confidence; {len(signals)} total in SIS) ---",
+        json.dumps(top_sigs, indent=2, default=str),
+        "",
+        f"documents_processed: {documents_processed}",
+        "",
+        "--- FINANCIAL PROFILE (if any) ---",
+        fin_block,
+    ]
+    return "\n".join(lines)

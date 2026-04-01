@@ -9,7 +9,9 @@ Endpoints:
   POST /api/cases/{id}/documents — Upload financial documents
   POST /api/cases/{id}/run-fis — Kick off FIS graph
   POST /api/cases/{id}/run-rs  — Kick off RS graph
-  POST /api/cases/{id}/run-all — Run FIS → RS sequentially
+  POST /api/cases/{id}/run-sis — Kick off SIS graph
+  POST /api/cases/{id}/run-frd — Kick off FRD graph
+  POST /api/cases/{id}/run-all — Run FIS → RS → SIS → FRD sequentially
 """
 
 import os
@@ -23,7 +25,7 @@ from sqlalchemy.orm import Session
 
 from backend.services.db.session import get_db
 from backend.services.db import crud
-from backend.services.graph_runner import run_fis_graph, run_rs_graph, run_full_pipeline
+from backend.services.graph_runner import run_fis_graph, run_rs_graph, run_sis_graph, run_frd_graph, run_full_pipeline
 from shared.states.case_state import (
     CaseState,
     CompanyProfile,
@@ -62,6 +64,7 @@ class CaseStatusResponse(BaseModel):
     created_at: str
     updated_at: str
     audit_log_count: int
+    frd_traffic_light: Optional[str] = None
 
 
 class CaseListItem(BaseModel):
@@ -144,6 +147,7 @@ def get_case_status(case_id: str, db: Session = Depends(get_db)):
         created_at=case.created_at.isoformat(),
         updated_at=case.updated_at.isoformat(),
         audit_log_count=len(case.audit_log),
+        frd_traffic_light=case.frd_traffic_light,
     )
 
 
@@ -245,13 +249,46 @@ def trigger_rs(
     return {"case_id": case_id, "action": "rs_started", "status": "running"}
 
 
+@router.post("/cases/{case_id}/run-sis")
+def trigger_sis(
+    case_id: str,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    """Kick off SIS graph as a background task."""
+    case = crud.get_case_state(db, case_id)
+    if case is None:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    background_tasks.add_task(run_sis_graph, case_id)
+    return {"case_id": case_id, "action": "sis_started", "status": "running"}
+
+
+@router.post("/cases/{case_id}/run-frd")
+def trigger_frd(
+    case_id: str,
+    background_tasks: BackgroundTasks,
+    skip_report: bool = False,
+    db: Session = Depends(get_db),
+):
+    """Kick off FRD graph as a background task. Pass ?skip_report=true to omit narrative generation."""
+    case = crud.get_case_state(db, case_id)
+    if case is None:
+        raise HTTPException(status_code=404, detail="Case not found")
+    if not case.sis_output:
+        raise HTTPException(status_code=400, detail="No SIS output available. Run SIS first.")
+
+    background_tasks.add_task(run_frd_graph, case_id, skip_report)
+    return {"case_id": case_id, "action": "frd_started", "status": "running"}
+
+
 @router.post("/cases/{case_id}/run-all")
 def trigger_full_pipeline(
     case_id: str,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
-    """Run FIS → RS sequentially as a background task."""
+    """Run FIS → RS → SIS → FRD sequentially as a background task."""
     case = crud.get_case_state(db, case_id)
     if case is None:
         raise HTTPException(status_code=404, detail="Case not found")

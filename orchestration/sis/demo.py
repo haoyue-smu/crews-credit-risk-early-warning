@@ -274,26 +274,11 @@ def _format_disputed_examples(
     return pairs
 
 
-def _gemini_pair_explain(sa: Signal, sb: Signal) -> Dict[str, Any]:
-    """Re-judge a disputed pair with Gemini to surface explanation for the demo."""
-    # Local imports so cached mode doesn't require google-genai unless used.
-    from google import genai  # type: ignore
-
-    api_key = os.getenv("GEMINI_API_KEY", "")
-    if not api_key:
-        raise RuntimeError("GEMINI_API_KEY not set; cannot run Gemini pair explanation.")
-
-    # Use the existing conflict prompt builder & parser.
+def _llm_pair_explain(sa: Signal, sb: Signal) -> Dict[str, Any]:
+    """Re-judge a disputed pair via OpenRouter to surface explanation for the demo."""
     from orchestration.sis.nodes import conflict as conflict_mod
 
-    client = genai.Client(api_key=api_key)
-    prompt = conflict_mod._build_pair_prompt(sa, sb)
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt,
-    )
-    raw = conflict_mod._response_text(response)
-    rel, expl = conflict_mod._parse_llm_json(raw)
+    rel, expl = conflict_mod._call_llm_pair(sa, sb)
     return {"relationship": rel, "explanation": expl}
 
 
@@ -308,10 +293,10 @@ def main() -> None:
 
     with st.sidebar:
         st.header("Tech Stack (per step)")
-        st.markdown("- **Extraction:** LangExtract + Gemini 2.5 Flash")
+        st.markdown("- **Extraction:** OpenRouter (configurable model)")
         st.markdown("- **Validation:** Pydantic schema + deterministic evidence checks")
-        st.markdown("- **Verification:** Gemini grounding verification")
-        st.markdown("- **Conflict Resolution:** NLI (DeBERTa-v3) + Gemini semantic confirmation")
+        st.markdown("- **Verification:** OpenRouter grounding verification")
+        st.markdown("- **Conflict Resolution:** NLI (DeBERTa-v3) + OpenRouter semantic confirmation")
         st.markdown("- **Evidence Gate:** deterministic routing + flags (no RS calls yet)")
 
     mode = st.radio("Mode", ["Cached Results", "Live Run"], horizontal=True)
@@ -335,18 +320,13 @@ def main() -> None:
 
     # --- Live mode execution ---
     if mode == "Live Run":
-        if not os.getenv("GEMINI_API_KEY"):
-            st.error("GEMINI_API_KEY is not set. Cached mode can still run without it.")
-            st.stop()
-        try:
-            import langextract  # noqa: F401
-        except ModuleNotFoundError:
-            st.error("langextract is not installed. Install with `pip install langextract` to run Live Run.")
+        if not os.getenv("OPENROUTER_API_KEY"):
+            st.error("OPENROUTER_API_KEY is not set. Cached mode can still run without it.")
             st.stop()
 
         # Step 1: Extraction
         t0 = time.perf_counter()
-        with st.spinner("Step 1/5: Extraction (LangExtract + Gemini) ..."):
+        with st.spinner("Step 1/5: Extraction (OpenRouter) ..."):
             signals_extracted = parallel_extract_signals(docs)
         t_extract = time.perf_counter() - t0
 
@@ -614,9 +594,9 @@ def main() -> None:
                         f"**Disputed evidence pair (cached):** {sa.signal_id} ({src_a}) <-> {sb.signal_id} ({src_b})"
                     )
                     try:
-                        judgment = _gemini_pair_explain(sa, sb)
+                        judgment = _llm_pair_explain(sa, sb)
                     except Exception as e:
-                        st.write(f"Gemini explanation fallback failed: {e!r}")
+                        st.write(f"LLM explanation failed: {e!r}")
                         st.code(f"A evidence: {sa.evidence[0].snippet if sa.evidence else ''}")
                         st.code(f"B evidence: {sb.evidence[0].snippet if sb.evidence else ''}")
                         continue

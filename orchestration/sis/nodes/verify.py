@@ -1,79 +1,39 @@
-"""SIS verification node (Phase 3).
+"""SIS verification node.
 
-Uses Gemini to verify that extracted signals are grounded in the source text
-and that their description is faithful to the underlying evidence.
+Verifies that extracted signals are grounded in their source documents.
+Uses OpenRouter (via OpenAI SDK) with per-thread clients for ThreadPoolExecutor safety.
 """
 
 from __future__ import annotations
 
 import json
-import os
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List
 
-from dotenv import load_dotenv
+from openai import OpenAI
 
+from shared.llm import get_client, MODEL_SIS
 from shared.schemas.documents import DocumentInput
 from shared.schemas.signals import Signal
-
 
 _tls = threading.local()
 
 
-def _require_gemini_api_key() -> None:
-    """Fail fast if verification cannot authenticate (same env pattern as extraction)."""
-
-    load_dotenv()
-    if not os.getenv("GEMINI_API_KEY"):
-        raise RuntimeError("Missing GEMINI_API_KEY in environment/.env for verification.")
-
-
-def _thread_verify_client() -> Any:
-    """One ``google.genai`` client per worker thread (avoids shared-client issues)."""
-
+def _thread_openai_client() -> OpenAI:
+    """One OpenAI client per worker thread."""
     c = getattr(_tls, "client", None)
     if c is not None:
         return c
-    load_dotenv()
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise RuntimeError("Missing GEMINI_API_KEY in environment/.env for verification.")
-    try:
-        from google import genai  # type: ignore
-    except ModuleNotFoundError as exc:  # pragma: no cover
-        raise RuntimeError(
-            "google-genai is not installed. Install it with `pip install google-genai`."
-        ) from exc
-    _tls.client = genai.Client(api_key=api_key)
+    _tls.client = get_client()
     return _tls.client
-
-
-def _response_text(response: Any) -> str:
-    t = getattr(response, "text", None)
-    if t:
-        return str(t)
-    cands = getattr(response, "candidates", None) or []
-    for cand in cands:
-        content = getattr(cand, "content", None)
-        parts = getattr(content, "parts", None) if content is not None else None
-        if not parts:
-            continue
-        chunks: List[str] = []
-        for p in parts:
-            txt = getattr(p, "text", None)
-            if txt:
-                chunks.append(str(txt))
-        if chunks:
-            return "".join(chunks)
-    return ""
 
 
 _CONTEXT_PAD_CHARS = 200
 
 
 def _windowed_source_context(full_text: str, start: int, end: int, pad: int = _CONTEXT_PAD_CHARS) -> str:
-    """Return ``full_text[start:end]`` expanded by ``pad`` chars on each side, clamped to bounds."""
+    """Return full_text[start:end] expanded by pad chars on each side, clamped to bounds."""
     n = len(full_text)
     lo = max(0, start - pad)
     hi = min(n, end + pad)
@@ -91,7 +51,6 @@ def _build_verification_prompt(
 
     ``original_text`` should be the windowed passage (char_interval ± padding), not the bare span.
     """
-
     return (
         "You are verifying whether a structured credit-risk signal is grounded in the source document.\n\n"
         "SOURCE CONTEXT (document excerpt; the grounded span lies within this window; "
@@ -121,8 +80,7 @@ def _verify_one_signal(
     signal: Signal,
     documents_by_id: Dict[str, DocumentInput],
 ) -> Dict[str, Any]:
-    """Run Gemini verification for a single signal (thread-local client per worker)."""
-    decision = "error"
+    """Run LLM verification for a single signal (thread-local client per worker)."""
     original_confidence = float(signal.confidence)
     adjusted_confidence = original_confidence
 
@@ -147,7 +105,7 @@ def _verify_one_signal(
     ci = primary_ev.char_interval
     try:
         source_context = _windowed_source_context(doc.full_text, ci.start, ci.end)
-    except Exception:  # pragma: no cover - defensive
+    except Exception:
         source_context = primary_ev.snippet
 
     prompt = _build_verification_prompt(
@@ -159,15 +117,15 @@ def _verify_one_signal(
     )
 
     try:
-        client = _thread_verify_client()
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-            config={"temperature": 0},
+        client = _thread_openai_client()
+        response = client.chat.completions.create(
+            model=MODEL_SIS,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
         )
-        text = _response_text(response) or ""
-    except Exception as exc:  # pragma: no cover - network/LLM errors
-        print(f"[parallel_verify_signals] Gemini call failed for {signal.signal_id}: {exc!r}")
+        text = response.choices[0].message.content or ""
+    except Exception as exc:
+        print(f"[verify] LLM call failed for {signal.signal_id}: {exc!r}")
         return {
             "signal": signal,
             "verification_decision": "error",
@@ -195,7 +153,7 @@ def _verify_one_signal(
         adjusted_confidence *= 0.2
 
     print(
-        f"[parallel_verify_signals] {signal.signal_id} -> "
+        f"[verify] {signal.signal_id} -> "
         f"decision={decision}, confidence={adjusted_confidence:.2f}"
     )
 
@@ -212,9 +170,7 @@ def parallel_verify_signals(
     documents: List[DocumentInput],
     max_workers: int = 10,
 ) -> List[Dict[str, Any]]:
-    """Verify extracted signals against source-grounding evidence using Gemini.
-
-    Runs up to ``max_workers`` concurrent Gemini calls (suitable for Paid Tier 1).
+    """Verify extracted signals against source-grounding evidence via OpenRouter.
 
     Args:
         signals: Signals produced by the extraction + validation steps.
@@ -227,9 +183,7 @@ def parallel_verify_signals(
         - ``verification_decision``: one of "yes", "partial", "no", or "error"
         - ``adjusted_confidence``: float confidence after verification
     """
-
     documents_by_id: Dict[str, DocumentInput] = {d.document_id: d for d in documents}
-    _require_gemini_api_key()
 
     if max_workers < 1:
         max_workers = 1

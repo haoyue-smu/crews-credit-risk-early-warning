@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
-from dotenv import load_dotenv
+from shared.llm import get_client, MODEL_FRD
 
 from orchestration.frd.prompts.report_template import REPORT_SYSTEM_PROMPT, build_report_prompt
 
@@ -31,26 +30,6 @@ _SECTION_TITLES = {
     "data_quality_notes": "Data Quality Notes",
     "recommended_actions": "Recommended Actions",
 }
-
-
-def _response_text(response: Any) -> str:
-    t = getattr(response, "text", None)
-    if t:
-        return str(t)
-    cands = getattr(response, "candidates", None) or []
-    for cand in cands:
-        content = getattr(cand, "content", None)
-        parts = getattr(content, "parts", None) if content is not None else None
-        if not parts:
-            continue
-        chunks: List[str] = []
-        for p in parts:
-            txt = getattr(p, "text", None)
-            if txt:
-                chunks.append(str(txt))
-        if chunks:
-            return "".join(chunks)
-    return ""
 
 
 def _strip_markdown_fences(text: str) -> str:
@@ -110,10 +89,9 @@ def generate_report(
     financial_profile: dict | None,
     documents_processed: int,
     *,
-    model_id: str = "gemini-2.5-flash",
+    model_id: str = MODEL_FRD,
 ) -> dict:
-    """
-    Generate an analyst-facing credit risk report using LLM.
+    """Generate an analyst-facing credit risk report using LLM.
 
     Returns:
         dict with sections (structured), full_narrative (markdown), model_used, generation_timestamp.
@@ -128,25 +106,15 @@ def generate_report(
     )
     full_prompt = f"{REPORT_SYSTEM_PROMPT.strip()}\n\n{user_block}"
 
-    load_dotenv()
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        return _fallback_result("Missing GEMINI_API_KEY in environment/.env.", model_id, ts)
-
     try:
-        from google import genai  # type: ignore
-    except ModuleNotFoundError as exc:
-        return _fallback_result(f"google-genai not installed: {exc}", model_id, ts)
-
-    try:
-        client = genai.Client(api_key=api_key)
-        response = client.models.generate_content(
+        client = get_client()
+        response = client.chat.completions.create(
             model=model_id,
-            contents=full_prompt,
-            config={"temperature": 0.3},
+            messages=[{"role": "user", "content": full_prompt}],
+            temperature=0.3,
         )
-        raw_text = _response_text(response)
-    except Exception as exc:  # pragma: no cover - network/API
+        raw_text = response.choices[0].message.content or ""
+    except Exception as exc:
         return _fallback_result(f"LLM call failed: {exc!r}", model_id, ts)
 
     parsed = _extract_json_object(raw_text)

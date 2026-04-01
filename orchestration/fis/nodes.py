@@ -25,7 +25,7 @@ from xml.etree import ElementTree
 from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-from shared.config import settings
+from shared.llm import get_client, MODEL_FIS
 from shared.states.case_state import (
     AuditEvent,
     BalanceSheetMetrics,
@@ -44,18 +44,6 @@ from shared.states.zscore import (
     build_peer_comparison,
 )
 from orchestration.state import AgentWorkerState
-
-
-# ---------------------------------------------------------------------------
-# OpenRouter client
-# ---------------------------------------------------------------------------
-
-def get_openrouter_client() -> OpenAI:
-    """Initializes the OpenRouter client using the OpenAI SDK."""
-    return OpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=settings.openrouter_api_key or "DUMMY_KEY_IF_MISSING",
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -296,8 +284,8 @@ def parse_financial_documents(state: AgentWorkerState) -> Dict[str, Any]:
     then uses OpenRouter (Gemini Flash) to extract structured financial data."""
     print("--- [FIS] PARSE FINANCIAL DOCUMENTS ---")
     case = state["case"].model_copy(deep=True)
-    client = get_openrouter_client()
-    model_id = settings.openrouter_model_id
+    client = get_client()
+    model_id = MODEL_FIS
 
     parsed_docs: list[ParsedFinancialDocument] = []
     audit_events = []

@@ -8,7 +8,7 @@ Usage:
     python -m orchestration.frd.run_scoring --no-financial
     python -m orchestration.frd.run_scoring --financial path/to/fp.json
     python -m orchestration.frd.run_scoring --no-report
-    python -m orchestration.frd.run_scoring --model gemini-2.5-pro
+    python -m orchestration.frd.run_scoring --model google/gemini-2.5-pro
 """
 
 from __future__ import annotations
@@ -18,6 +18,7 @@ import json
 import sys
 from pathlib import Path
 
+from shared.llm import MODEL_FRD
 from orchestration.frd.nodes.aggregate_inputs import aggregate_inputs
 from orchestration.frd.nodes.score_risk import score_risk
 from shared.schemas.frd import CriteriaWeight, FRDOutput, FinancialProfile, ScoringConfig, TrafficLight
@@ -164,9 +165,9 @@ def main() -> None:
     )
     parser.add_argument(
         "--model",
-        default="gemini-2.5-flash",
+        default="",
         metavar="MODEL_ID",
-        help="Gemini model id for report generation (default: gemini-2.5-flash)",
+        help="OpenRouter model ID for report generation (default: OPENROUTER_MODEL_FRD env var, fallback OPENROUTER_MODEL_ID)",
     )
     args = parser.parse_args()
 
@@ -207,7 +208,7 @@ def main() -> None:
             signals=signals,
             financial_profile=fp_report_dict,
             documents_processed=int(aggregated["documents_processed"]),
-            model_id=args.model,
+            model_id=args.model or MODEL_FRD,
         )
 
     frd = FRDOutput(

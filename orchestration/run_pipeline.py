@@ -51,8 +51,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--model",
-        default="gemini-2.5-flash",
-        help="Gemini model id for FRD report (default: gemini-2.5-flash)",
+        default="",
+        help="OpenRouter model ID for FRD report (default: OPENROUTER_MODEL_FRD env var, fallback OPENROUTER_MODEL_ID)",
     )
     args = parser.parse_args()
 

@@ -46,7 +46,8 @@ def frd_report_node(state: PipelineState) -> Dict[str, Any]:
     agg = state.get("frd_aggregated") or {}
     risk = RiskScore.model_validate(state["risk_score"])
     skip = bool(state.get("skip_report"))
-    model_id = str(state.get("report_model_id") or "gemini-2.5-flash")
+    from shared.llm import MODEL_FRD
+    model_id = str(state.get("report_model_id") or MODEL_FRD)
 
     report_dict: Dict[str, Any] | None
     if skip:

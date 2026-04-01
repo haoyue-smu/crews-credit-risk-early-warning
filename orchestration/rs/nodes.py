@@ -25,6 +25,7 @@ from openai import AsyncOpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from shared.config import settings
+from shared.llm import get_async_client, MODEL_RS
 from shared.states.case_state import (
     AuditEvent,
     CoverageStatus,
@@ -44,17 +45,14 @@ from orchestration.state import AgentWorkerState
 # Clients
 # ---------------------------------------------------------------------------
 
-def _get_async_openrouter_client() -> AsyncOpenAI:
-    return AsyncOpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=settings.openrouter_api_key or "DUMMY_KEY",
-    )
-
-
 def _get_tavily_client():
-    """Returns a TavilyClient. Import deferred so the module loads without tavily installed."""
+    """Returns a TavilyClient. Raises clearly if the API key is missing.
+
+    Import is deferred so the module loads without tavily installed.
+    """
+    settings.require_retrieval()
     from tavily import TavilyClient
-    return TavilyClient(api_key=settings.tavily_api_key or "DUMMY_KEY")
+    return TavilyClient(api_key=settings.tavily_api_key)
 
 
 # ---------------------------------------------------------------------------
@@ -197,8 +195,8 @@ async def plan_retrieval(state: AgentWorkerState) -> Dict[str, Any]:
         f"\nGenerate search queries for comprehensive credit risk assessment."
     )
 
-    client = _get_async_openrouter_client()
-    model_id = settings.openrouter_model_id
+    client = get_async_client()
+    model_id = MODEL_RS
 
     try:
         result = await _async_llm_json_call(client, model_id, PLAN_RETRIEVAL_SYSTEM, user_prompt)
@@ -433,8 +431,8 @@ async def relevance_filter(state: AgentWorkerState) -> Dict[str, Any]:
     _BATCH_SIZE = 25
     if pre_filter:
         try:
-            client = _get_async_openrouter_client()
-            model_id = settings.openrouter_model_id
+            client = get_async_client()
+            model_id = MODEL_RS
 
             url_scores: dict[str, float] = {}
             url_topics: dict[str, list[str]] = {}
@@ -608,8 +606,8 @@ async def retrieval_retry(state: AgentWorkerState) -> Dict[str, Any]:
     coverage_state = CoverageState(**rs_cov_data) if rs_cov_data else None
 
     # Generate new queries using LLM
-    client = _get_async_openrouter_client()
-    model_id = settings.openrouter_model_id
+    client = get_async_client()
+    model_id = MODEL_RS
 
     retry_prompt = (
         f"Company: {case.company.company_name}\n"

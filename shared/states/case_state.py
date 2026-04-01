@@ -280,6 +280,13 @@ class CaseState(BaseModel):
 
     coverage: CoverageStatus = Field(default_factory=CoverageStatus)
 
+    # SIS output (signal extraction + verification + conflict resolution)
+    sis_output: dict[str, Any] | None = None
+
+    # FRD output (traffic light scoring + analyst report)
+    frd_output: dict[str, Any] | None = None
+    frd_traffic_light: str | None = None  # "red" | "amber" | "green"
+
     warnings: list[str] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)
     audit_log: list[AuditEvent] = Field(default_factory=list)

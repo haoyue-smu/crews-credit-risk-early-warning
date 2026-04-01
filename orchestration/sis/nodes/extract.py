@@ -1,168 +1,125 @@
-"""SIS extraction node (Phase 2).
+"""SIS extraction node.
 
-Extracts credit-relevant signals from SQ-produced documents using LangExtract + Gemini.
+Extracts credit-relevant signals from documents using OpenRouter (via OpenAI SDK).
+Each document gets one chat.completions call; char intervals are located with str.find().
 """
 
 from __future__ import annotations
 
-import os
-from typing import Any
+import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from dotenv import load_dotenv
-
+from shared.llm import get_client, MODEL_SIS
 from shared.schemas.documents import DocumentInput
 from shared.schemas.signals import CharInterval, Evidence, Signal
 from shared.taxonomy import EventCategory, Severity
 
-EXTRACTION_TEMPERATURE = 0
+from orchestration.sis.prompts.templates import EXTRACTION_PROMPT
+
+_EXTRACTION_TEMPERATURE = 0
+
+_FORMAT_INSTRUCTIONS = (
+    "\n\nReturn a JSON object with a single key \"extractions\" containing an array. "
+    "Each element must have exactly these keys:\n"
+    "- \"event_type\": one of the allowed EventCategory values\n"
+    "- \"event_subtype\": a concise snake_case label\n"
+    "- \"severity\": exactly one of: low, medium, high, positive\n"
+    "- \"extraction_text\": the exact verbatim span copied from the input text\n\n"
+    "If no relevant signals are found, return {\"extractions\": []}."
+)
 
 
-def _extractions_from_lx_result(result: Any) -> list[Any]:
-    """Best-effort discovery of the extractions list from a LangExtract result."""
-    if result is None:
-        return []
-    if isinstance(result, dict):
-        if isinstance(result.get("extractions"), list):
-            return result["extractions"]
-        for v in result.values():
-            found = _extractions_from_lx_result(v)
-            if found:
-                return found
-    if hasattr(result, "extractions") and isinstance(getattr(result, "extractions"), list):
-        return list(result.extractions)
-    if isinstance(result, list):
-        for item in result:
-            found = _extractions_from_lx_result(item)
-            if found:
-                return found
-    return []
+def _extract_one(doc: DocumentInput, client) -> list[Signal]:
+    """Run LLM extraction for a single document and return Signal instances."""
+    system_prompt = EXTRACTION_PROMPT + _FORMAT_INSTRUCTIONS
+    user_prompt = f"Extract credit-relevant signals from this text:\n\n{doc.full_text}"
 
+    response = client.chat.completions.create(
+        model=MODEL_SIS,
+        response_format={"type": "json_object"},
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        temperature=_EXTRACTION_TEMPERATURE,
+    )
+    data = json.loads(response.choices[0].message.content)
 
-def _signals_from_lx_result(doc: DocumentInput, result: Any) -> list[Signal]:
-    """Map LangExtract output for one document to ``Signal`` instances."""
     signals: list[Signal] = []
-    for ex in _extractions_from_lx_result(result):
-        # LangExtract may return each extraction either as a plain dict
-        # (when using JSON-serialized outputs) or as an Extraction(...) object
-        # (when using in-memory results from `lx.extract`).
-        if isinstance(ex, dict):
-            extraction_class = ex.get("extraction_class")
-            attributes = ex.get("attributes", {}) or {}
-            ci = ex.get("char_interval", {}) or {}
-            extraction_text = ex.get("extraction_text", "") or ""
-            extraction_index = ex.get("extraction_index")
-            group_index = ex.get("group_index")
-            start_pos = ci.get("start_pos")
-            end_pos = ci.get("end_pos")
-        else:
-            extraction_class = getattr(ex, "extraction_class", None)
-            attributes = getattr(ex, "attributes", {}) or {}
-            extraction_text = getattr(ex, "extraction_text", "") or ""
-            extraction_index = getattr(ex, "extraction_index", None)
-            group_index = getattr(ex, "group_index", None)
-            char_interval_obj = getattr(ex, "char_interval", None)
-            start_pos = getattr(char_interval_obj, "start_pos", None) if char_interval_obj is not None else None
-            end_pos = getattr(char_interval_obj, "end_pos", None) if char_interval_obj is not None else None
-
-        if extraction_class is None:
+    for idx, ex in enumerate(data.get("extractions", [])):
+        if not isinstance(ex, dict):
             continue
 
+        extraction_text = str(ex.get("extraction_text", ""))
         try:
-            event_type = EventCategory(str(extraction_class))
-            severity = Severity(attributes["severity"])
+            event_type = EventCategory(str(ex.get("event_type", "")))
+            severity = Severity(str(ex.get("severity", "")))
         except Exception:
             continue
 
-        event_subtype = str(attributes.get("event_subtype", ""))
-
-        try:
-            char_interval = CharInterval(
-                start=int(start_pos),
-                end=int(end_pos),
-            )
-        except Exception:
-            continue
+        # Find char interval in the source text (exact match first, then case-insensitive)
+        start = doc.full_text.find(extraction_text)
+        if start == -1:
+            start = doc.full_text.lower().find(extraction_text.lower())
+        if start == -1:
+            continue  # Cannot locate span — skip rather than fabricate positions
 
         evidence = Evidence(
             source_name=doc.source_name,
             document_id=doc.document_id,
             date=doc.published_date,
-            snippet=str(extraction_text),
-            char_interval=char_interval,
+            snippet=extraction_text,
+            char_interval=CharInterval(start=start, end=start + len(extraction_text)),
             source_quality=doc.source_quality_score,
         )
+        signals.append(Signal(
+            signal_id=f"{doc.document_id}_{idx}",
+            event_type=event_type,
+            event_subtype=str(ex.get("event_subtype", "")),
+            severity=severity,
+            confidence=1.0,
+            ambiguous=False,
+            evidence=[evidence],
+        ))
 
-        signals.append(
-            Signal(
-                signal_id=f"{doc.document_id}_{extraction_index}_{group_index}",
-                event_type=event_type,
-                event_subtype=event_subtype,
-                severity=severity,
-                confidence=1.0,
-                ambiguous=False,
-                evidence=[evidence],
-            )
-        )
     return signals
 
 
-def parallel_extract_signals(documents: list[DocumentInput]) -> list[Signal]:
-    """Extract signals from documents (parallelized LLM extraction).
-
-    Uses Gemini Paid Tier 1–friendly settings: ``extraction_passes=1``,
-    ``max_workers=10`` per LangExtract call (no artificial throttling).
+def parallel_extract_signals(
+    documents: list[DocumentInput],
+    max_workers: int = 10,
+) -> list[Signal]:
+    """Extract signals from all documents using parallel OpenRouter calls.
 
     Args:
-        documents: Documents produced by SQ for a single company or batch.
+        documents: Documents produced by the RS subgraph.
+        max_workers: Max concurrent LLM calls (suitable for paid-tier rate limits).
 
     Returns:
-        Extracted raw signals with traceability and evidence.
+        Extracted raw signals with evidence and char intervals.
     """
-    try:
-        import langextract as lx  # type: ignore
-    except ModuleNotFoundError as exc:  # pragma: no cover
-        raise RuntimeError(
-            "langextract is not installed. Install with `pip install langextract`."
-        ) from exc
+    client = get_client()
 
-    load_dotenv()
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    if not gemini_api_key:
-        raise RuntimeError("Missing GEMINI_API_KEY in environment/.env for extraction.")
-
-    os.environ["LANGEXTRACT_API_KEY"] = gemini_api_key
-
-    from orchestration.sis.prompts.examples import get_sis_example_data
-    from orchestration.sis.prompts.templates import EXTRACTION_PROMPT
-
-    examples = get_sis_example_data()
-    all_signals: list[Signal] = []
-
-    for doc in documents:
-        extract_kwargs = dict(
-            text_or_documents=doc.full_text,
-            prompt_description=EXTRACTION_PROMPT,
-            examples=examples,
-            model_id="gemini-2.5-flash",
-            extraction_passes=1,
-            max_workers=10,
-        )
-        try:
-            # Preferred for LangExtract versions that forward Gemini generation config.
-            result = lx.extract(
-                **extract_kwargs,
-                generation_config={"temperature": EXTRACTION_TEMPERATURE},
-            )
-        except TypeError:
+    if len(documents) <= 1 or max_workers == 1:
+        all_signals: list[Signal] = []
+        for doc in documents:
             try:
-                # Some versions may accept direct `temperature`.
-                result = lx.extract(
-                    **extract_kwargs,
-                    temperature=EXTRACTION_TEMPERATURE,
-                )
-            except TypeError:
-                # Backward-compatible fallback if temperature kwargs are unsupported.
-                result = lx.extract(**extract_kwargs)
-        all_signals.extend(_signals_from_lx_result(doc, result))
+                all_signals.extend(_extract_one(doc, client))
+            except Exception as exc:
+                print(f"[extract] Failed on {doc.document_id}: {exc!r}")
+        return all_signals
+
+    all_signals = []
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_doc = {
+            executor.submit(_extract_one, doc, client): doc
+            for doc in documents
+        }
+        for fut in as_completed(future_to_doc):
+            doc = future_to_doc[fut]
+            try:
+                all_signals.extend(fut.result())
+            except Exception as exc:
+                print(f"[extract] Failed on {doc.document_id}: {exc!r}")
 
     return all_signals

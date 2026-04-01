@@ -2,13 +2,12 @@
 
 Stage 1: deterministic cross-document merge for identical event_subtype (no ML).
 Stage 2: CrossEncoder NLI screens all cross-document snippet pairs (local, batched).
-Stage 3: Gemini confirms NLI candidates via ``_build_pair_prompt`` (google.genai).
+Stage 3: LLM confirms NLI candidates via ``_build_pair_prompt`` (OpenRouter/OpenAI SDK).
 """
 
 from __future__ import annotations
 
 import json
-import os
 import re
 
 import numpy as np
@@ -17,8 +16,9 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional, Tuple
 
-from dotenv import load_dotenv
+from openai import OpenAI
 
+from shared.llm import get_client, MODEL_SIS
 from shared.schemas.documents import DocumentInput
 from shared.schemas.signals import ConflictStatus, Evidence, Signal
 from shared.taxonomy import EventCategory, Severity
@@ -165,43 +165,13 @@ def _build_all_cross_document_pairs(
 _tls = threading.local()
 
 
-def _thread_genai_client() -> Any:
-    """One ``google.genai`` client per worker thread (avoids shared-client issues)."""
+def _thread_openai_client() -> OpenAI:
+    """One OpenAI client per worker thread (avoids shared-client issues)."""
     c = getattr(_tls, "client", None)
     if c is not None:
         return c
-    load_dotenv()
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise RuntimeError("Missing GEMINI_API_KEY for conflict_resolution (google.genai).")
-    try:
-        from google import genai  # type: ignore
-    except ModuleNotFoundError as exc:  # pragma: no cover
-        raise RuntimeError(
-            "google-genai is not installed. Install with `pip install google-genai`."
-        ) from exc
-    _tls.client = genai.Client(api_key=api_key)
+    _tls.client = get_client()
     return _tls.client
-
-
-def _response_text(response: Any) -> str:
-    t = getattr(response, "text", None)
-    if t:
-        return str(t)
-    cands = getattr(response, "candidates", None) or []
-    for cand in cands:
-        content = getattr(cand, "content", None)
-        parts = getattr(content, "parts", None) if content is not None else None
-        if not parts:
-            continue
-        chunks: List[str] = []
-        for p in parts:
-            txt = getattr(p, "text", None)
-            if txt:
-                chunks.append(str(txt))
-        if chunks:
-            return "".join(chunks)
-    return ""
 
 
 def _build_pair_prompt(sa: Signal, sb: Signal) -> str:
@@ -268,15 +238,15 @@ def _parse_llm_json(text: str) -> Tuple[str, str]:
         return "unrelated", "parse_error"
 
 
-def _call_gemini_pair(sa: Signal, sb: Signal) -> Tuple[str, str]:
-    client = _thread_genai_client()
+def _call_llm_pair(sa: Signal, sb: Signal) -> Tuple[str, str]:
+    client = _thread_openai_client()
     prompt = _build_pair_prompt(sa, sb)
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt,
-        config={"temperature": 0},
+    response = client.chat.completions.create(
+        model=MODEL_SIS,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0,
     )
-    raw = _response_text(response)
+    raw = response.choices[0].message.content or ""
     return _parse_llm_json(raw)
 
 
@@ -419,16 +389,16 @@ def conflict_resolution(
     *,
     max_workers: int = 10,
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
-    """Resolve conflicts: Stage 1 dedup, NLI screen, Gemini confirm contradictions/duplicates.
+    """Resolve conflicts: Stage 1 dedup, NLI screen, LLM confirm contradictions/duplicates.
 
     Args:
         verification_items: Dicts with ``signal``, optional verification fields.
         documents: Source documents for company / document lookup.
-        max_workers: Max concurrent Gemini calls for Stage 3.
+        max_workers: Max concurrent LLM calls for Stage 3.
 
     Returns:
         (updated_items, summary) including nli_pairs_screened, nli_contradictions_detected,
-        gemini_confirmed, contradiction_explanations (Gemini-confirmed contradiction edges),
+        llm_confirmed, contradiction_explanations (LLM-confirmed contradiction edges),
         plus legacy numeric counters.
     """
     total_input = len(verification_items)
@@ -456,7 +426,7 @@ def conflict_resolution(
     cross_pairs = _build_all_cross_document_pairs(working, docs_by_id)
     nli_pairs_screened = len(cross_pairs)
     nli_contradictions_detected = 0
-    gemini_confirmed = 0
+    llm_confirmed = 0
     contradictions_found = 0
     contradiction_explanations: List[Dict[str, str]] = []
 
@@ -508,32 +478,32 @@ def conflict_resolution(
     contradiction_edges: List[Tuple[int, int]] = []
 
     if nli_candidate_pairs:
-        def _gemini_task(
+        def _llm_task(
             ia: int,
             ib: int,
         ) -> Tuple[int, int, str, str]:
             sa = working[ia]["signal"]
             sb = working[ib]["signal"]
-            rel, expl = _call_gemini_pair(sa, sb)
-            print(f"[GEMINI] {sa.signal_id} vs {sb.signal_id}: {rel} - {expl}")
+            rel, expl = _call_llm_pair(sa, sb)
+            print(f"[LLM] {sa.signal_id} vs {sb.signal_id}: {rel} - {expl}")
             return (ia, ib, rel, expl)
 
         mw = max(1, min(max_workers, len(nli_candidate_pairs)))
-        gemini_results: List[Tuple[int, int, str, str]] = []
+        llm_results: List[Tuple[int, int, str, str]] = []
         with ThreadPoolExecutor(max_workers=mw) as ex:
             futs = [
-                ex.submit(_gemini_task, ia, ib)
+                ex.submit(_llm_task, ia, ib)
                 for ia, ib, _ in nli_candidate_pairs
             ]
             for fut in as_completed(futs):
-                gemini_results.append(fut.result())
+                llm_results.append(fut.result())
 
-        for ia, ib, rel, expl in gemini_results:
+        for ia, ib, rel, expl in llm_results:
             if rel == "duplicate":
                 duplicate_edges.append((ia, ib))
             elif rel == "contradiction":
                 contradiction_edges.append((ia, ib))
-                gemini_confirmed += 1
+                llm_confirmed += 1
                 contradictions_found += 1
                 sa = working[ia]["signal"]
                 sb = working[ib]["signal"]
@@ -572,7 +542,7 @@ def conflict_resolution(
         "positive_auto_ambiguous": positive_auto_ambiguous,
         "nli_pairs_screened": nli_pairs_screened,
         "nli_contradictions_detected": nli_contradictions_detected,
-        "gemini_confirmed": gemini_confirmed,
+        "llm_confirmed": llm_confirmed,
         "contradiction_explanations": contradiction_explanations,
     }
     return working, summary

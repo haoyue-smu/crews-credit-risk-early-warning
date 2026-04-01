@@ -8,15 +8,17 @@ from orchestration.fis.nodes import (
 
 
 def build_fis_graph():
-    """Builds and compiles just the Financial Ingestion Subgraph (FIS)."""
+    """Builds and compiles the Financial Ingestion Subgraph (FIS).
+
+    Sequential deterministic flow:
+      ingest_client_financials → parse_financial_documents → extract_financial_features → END
+    """
     graph = StateGraph(AgentWorkerState)
 
-    # Add FIS nodes
     graph.add_node("ingest_client_financials", ingest_client_financials)
     graph.add_node("parse_financial_documents", parse_financial_documents)
     graph.add_node("extract_financial_features", extract_financial_features)
 
-    # Edge routing for sequential deterministic flow
     graph.set_entry_point("ingest_client_financials")
     graph.add_edge("ingest_client_financials", "parse_financial_documents")
     graph.add_edge("parse_financial_documents", "extract_financial_features")

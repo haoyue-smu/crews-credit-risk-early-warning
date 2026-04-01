@@ -1,8 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<IncomeStatement>
-    <Revenue>5000000</Revenue>
-    <CostOfGoodsSold>2000000</CostOfGoodsSold>
-    <GrossProfit>3000000</GrossProfit>
-    <OperatingExpenses>1000000</OperatingExpenses>
-    <NetIncome>2000000</NetIncome>
-</IncomeStatement>
+<FinancialStatements company="Acme Manufacturing Corp" fiscalYear="2024" period="FY" currency="USD" audited="true">
+  <IncomeStatement>
+    <Revenue>85000000</Revenue>
+    <CostOfGoodsSold>51000000</CostOfGoodsSold>
+    <GrossProfit>34000000</GrossProfit>
+    <OperatingExpenses>18000000</OperatingExpenses>
+    <DepreciationAmortization>4500000</DepreciationAmortization>
+    <OperatingIncome>16000000</OperatingIncome>
+    <InterestExpense>2800000</InterestExpense>
+    <NetIncome>10200000</NetIncome>
+    <EarningsPerShare>3.40</EarningsPerShare>
+  </IncomeStatement>
+  <BalanceSheet>
+    <TotalAssets>120000000</TotalAssets>
+    <CurrentAssets>42000000</CurrentAssets>
+    <CashAndEquivalents>8500000</CashAndEquivalents>
+    <Inventory>12000000</Inventory>
+    <AccountsReceivable>14000000</AccountsReceivable>
+    <TotalLiabilities>68000000</TotalLiabilities>
+    <CurrentLiabilities>22000000</CurrentLiabilities>
+    <LongTermDebt>38000000</LongTermDebt>
+    <TotalEquity>52000000</TotalEquity>
+    <RetainedEarnings>35000000</RetainedEarnings>
+  </BalanceSheet>
+  <CashFlowStatement>
+    <OperatingCashFlow>18500000</OperatingCashFlow>
+    <InvestingCashFlow>-7200000</InvestingCashFlow>
+    <FinancingCashFlow>-5800000</FinancingCashFlow>
+    <CapitalExpenditures>6500000</CapitalExpenditures>
+    <FreeCashFlow>12000000</FreeCashFlow>
+  </CashFlowStatement>
+</FinancialStatements>

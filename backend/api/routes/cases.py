@@ -12,6 +12,8 @@ Endpoints:
   POST /api/cases/{id}/run-sis — Kick off SIS graph
   POST /api/cases/{id}/run-frd — Kick off FRD graph
   POST /api/cases/{id}/run-all — Run FIS → RS → SIS → FRD sequentially
+  POST /api/cases/{id}/guidance — Save analyst guidance text
+  POST /api/cases/{id}/chat    — LLM chat assistant using case context
 """
 
 import os
@@ -26,6 +28,7 @@ from sqlalchemy.orm import Session
 from backend.services.db.session import get_db
 from backend.services.db import crud
 from backend.services.graph_runner import run_fis_graph, run_rs_graph, run_sis_graph, run_frd_graph, run_full_pipeline
+from backend.services.chat_service import chat_with_case
 from shared.states.case_state import (
     CaseState,
     CompanyProfile,
@@ -297,3 +300,36 @@ def trigger_full_pipeline(
 
     background_tasks.add_task(run_full_pipeline, case_id)
     return {"case_id": case_id, "action": "full_pipeline_started", "status": "running"}
+
+
+class GuidanceRequest(BaseModel):
+    guidance: str
+
+
+@router.post("/cases/{case_id}/guidance")
+def save_guidance(case_id: str, req: GuidanceRequest, db: Session = Depends(get_db)):
+    """Save analyst guidance text to the case. Injected into FRD report generation."""
+    case = crud.get_case_state(db, case_id)
+    if case is None:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    case.analyst_guidance = req.guidance.strip() or None
+    case.updated_at = datetime.utcnow()
+    crud.update_case(db, case_id, case)
+    return {"case_id": case_id, "guidance": case.analyst_guidance}
+
+
+class ChatRequest(BaseModel):
+    message: str
+    history: list[dict] = []
+
+
+@router.post("/cases/{case_id}/chat")
+def chat_with_case_endpoint(case_id: str, req: ChatRequest, db: Session = Depends(get_db)):
+    """LLM chat assistant. Returns a reply grounded in the case's analysis data."""
+    case = crud.get_case_state(db, case_id)
+    if case is None:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    reply = chat_with_case(case.model_dump(mode="json"), req.message, req.history)
+    return {"reply": reply}

@@ -27,6 +27,9 @@ NLI_MODEL_NAME = "cross-encoder/nli-deberta-v3-base"
 # Logits order: contradiction (0), entailment (1), neutral (2) for this checkpoint.
 NLI_CONTRADICTION_INDEX = 0
 
+# Cap evidence items per signal to prevent O(n) growth during merging/resolution.
+MAX_EVIDENCE_PER_SIGNAL: int = 5
+
 
 def _load_cross_encoder():
     try:
@@ -82,7 +85,7 @@ def _merge_signal_group(signals: List[Signal]) -> Signal:
     new_id = "merged_" + "_".join(ids)[:180]
     merged = base.model_copy(deep=True)
     merged.signal_id = new_id
-    merged.evidence = list(ev_map.values())
+    merged.evidence = list(ev_map.values())[:MAX_EVIDENCE_PER_SIGNAL]
     merged.confidence = max(s.confidence for s in signals)
     merged.conflict_status = ConflictStatus.resolved
     merged.ambiguous = False
@@ -327,6 +330,8 @@ def _apply_duplicate_and_contradiction_edges(
             winner.conflict_status = ConflictStatus.resolved
             winner.ambiguous = False
             for e in loser.evidence:
+                if len(winner.evidence) >= MAX_EVIDENCE_PER_SIGNAL:
+                    break
                 key = (e.document_id, e.char_interval.start, e.char_interval.end)
                 if not any(
                     x.document_id == key[0]

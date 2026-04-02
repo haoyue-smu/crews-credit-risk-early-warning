@@ -250,6 +250,7 @@ def run_frd_graph(case_id: str, skip_report: bool = False) -> None:
             "sis_output": case.sis_output,
             "financial_profile": financial_features_to_profile(case),
             "skip_report": skip_report,
+            "analyst_guidance": case.analyst_guidance or "",
         }
 
         graph = build_frd_graph()

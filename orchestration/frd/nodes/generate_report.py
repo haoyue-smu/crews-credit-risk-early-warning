@@ -90,6 +90,7 @@ def generate_report(
     documents_processed: int,
     *,
     model_id: str = MODEL_FRD,
+    analyst_guidance: str = "",
 ) -> dict:
     """Generate an analyst-facing credit risk report using LLM.
 
@@ -105,6 +106,13 @@ def generate_report(
         documents_processed=documents_processed,
     )
     full_prompt = f"{REPORT_SYSTEM_PROMPT.strip()}\n\n{user_block}"
+
+    if analyst_guidance:
+        full_prompt += (
+            f"\n\n---\nAnalyst context provided by the reviewing analyst:\n"
+            f"{analyst_guidance}\n"
+            f"Please incorporate the above context where relevant in your report.\n---"
+        )
 
     try:
         client = get_client()

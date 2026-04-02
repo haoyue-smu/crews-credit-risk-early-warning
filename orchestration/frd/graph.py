@@ -59,6 +59,7 @@ def frd_report_node(state: PipelineState) -> Dict[str, Any]:
             financial_profile=agg.get("financial_profile"),
             documents_processed=int(agg.get("documents_processed", 0)),
             model_id=model_id,
+            analyst_guidance=str(state.get("analyst_guidance") or ""),
         )
 
     fp_model = (

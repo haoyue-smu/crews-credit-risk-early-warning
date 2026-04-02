@@ -287,6 +287,10 @@ class CaseState(BaseModel):
     frd_output: dict[str, Any] | None = None
     frd_traffic_light: str | None = None  # "red" | "amber" | "green"
 
+    # Analyst guidance — free-text context saved on the Run Analysis page,
+    # injected into the FRD report generation prompt.
+    analyst_guidance: str | None = None
+
     warnings: list[str] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)
     audit_log: list[AuditEvent] = Field(default_factory=list)

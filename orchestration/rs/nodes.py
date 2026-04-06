@@ -467,11 +467,11 @@ async def relevance_filter(state: AgentWorkerState) -> Dict[str, Any]:
                     url_scores[s.get("url", "")] = s.get("relevance_score", 0.5)
                     url_topics[s.get("url", "")] = s.get("matched_topics", [])
 
-            # Keep items scoring >= 0.3
+            # Keep items scoring >= 0.5
             scored_results = []
             for item in pre_filter:
                 score = url_scores.get(item.url, 0.5)
-                if score >= 0.3:
+                if score >= 0.5:
                     item.raw_payload["_relevance_score"] = score
                     item.raw_payload["_matched_topics"] = url_topics.get(item.url, [])
                     scored_results.append(item)
@@ -719,8 +719,8 @@ async def source_quality_assessment(state: AgentWorkerState) -> Dict[str, Any]:
     normalized = []
     for item in scored_items:
         quality = item.raw_payload.get("_quality_score", 0.5)
-        if quality < 0.2:
-            continue  # Skip very low quality sources
+        if quality < 0.45:
+            continue  # Skip low quality sources
 
         doc_id = hashlib.md5(item.url.encode()).hexdigest()[:12]
         source_type = source_type_map.get(item.source, SourceType.web)

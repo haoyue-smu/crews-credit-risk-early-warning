@@ -36,12 +36,13 @@ class CriteriaResult(BaseModel):
 class ScoringConfig(BaseModel):
     """Configurable thresholds — tuned via backtesting."""
 
-    high_criteria_for_red: int = 1  # ≥N high-weight criteria met → Red
-    medium_criteria_for_red: int = 3  # ≥N medium-weight criteria met → Red
-    medium_criteria_for_amber: int = 1  # ≥N medium-weight criteria met → Amber
-    low_criteria_for_amber: int = 3  # ≥N low-weight criteria met → Amber
-    mitigating_confidence_threshold: float = 0.7  # positive signals need ≥ this confidence to mitigate
-    mitigating_max_override_high: int = 1  # can only downgrade if ≤N high criteria met
+    high_criteria_for_red: int = 2          # ≥N high-weight criteria met → Red (was 1)
+    medium_criteria_for_red: int = 3        # ≥N medium-weight criteria met → Red
+    medium_criteria_for_amber: int = 1      # ≥N medium-weight criteria met → Amber
+    low_criteria_for_amber: int = 3         # ≥N low-weight criteria met → Amber
+    mitigating_confidence_threshold: float = 0.65  # positive signals need ≥ this confidence (was 0.7)
+    mitigating_max_override_high: int = 2   # can downgrade if ≤N high criteria met (was 1)
+    min_signal_confidence: float = 0.5      # Category A signals below this confidence are ignored
 
 
 class ZScoreZone(str, Enum):

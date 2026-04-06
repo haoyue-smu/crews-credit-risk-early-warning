@@ -31,12 +31,13 @@ def _match_a1_financial_distress_high_clear(signals: Sequence[SignalDict]) -> Li
 
 
 def _match_a2_legal_regulatory(signals: Sequence[SignalDict]) -> List[SignalDict]:
-    return [
+    matched = [
         s
         for s in signals
         if str(s.get("event_type", "")) == "legal_regulatory"
         and str(s.get("severity", "")) in ("high", "medium")
     ]
+    return matched if len(matched) >= 2 else []
 
 
 def _match_a3_management_instability(signals: Sequence[SignalDict]) -> List[SignalDict]:
@@ -45,12 +46,13 @@ def _match_a3_management_instability(signals: Sequence[SignalDict]) -> List[Sign
 
 
 def _match_a4_operational(signals: Sequence[SignalDict]) -> List[SignalDict]:
-    return [
+    matched = [
         s
         for s in signals
         if str(s.get("event_type", "")) == "operational_issues"
         and str(s.get("severity", "")) in ("high", "medium")
     ]
+    return matched if len(matched) >= 2 else []
 
 
 def _match_a5_reputation_negative_trend(signals: Sequence[SignalDict]) -> List[SignalDict]:
@@ -233,10 +235,15 @@ def _format_criteria_detail(matched: List[SignalDict]) -> str:
     return f"{n} signals: {', '.join(subtypes)}"
 
 
-def _evaluate_category_a(signals: List[SignalDict]) -> List[CriteriaResult]:
+def _evaluate_category_a(signals: List[SignalDict], cfg: ScoringConfig) -> List[CriteriaResult]:
+    # Drop low-confidence signals before any criterion is evaluated
+    confident_signals = [
+        s for s in signals
+        if float(s.get("confidence", 0.0) or 0.0) >= cfg.min_signal_confidence
+    ]
     results: List[CriteriaResult] = []
     for spec in CATEGORY_A_CRITERIA:
-        matched = spec.matcher(signals)
+        matched = spec.matcher(confident_signals)
         met = len(matched) > 0
         results.append(
             CriteriaResult(
@@ -379,7 +386,7 @@ def score_risk(
     signal_rows: List[SignalDict] = [dict(s) for s in signals]
     fp = _parse_financial_profile(financial_profile)
 
-    results_a = _evaluate_category_a(signal_rows)
+    results_a = _evaluate_category_a(signal_rows, cfg)
     results_b = _evaluate_category_b(fp)
     criteria_results = results_a + results_b
 

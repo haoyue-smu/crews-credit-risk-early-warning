@@ -380,6 +380,8 @@ def extract_financial_features(state: AgentWorkerState) -> Dict[str, Any]:
         print(f"  {msg}")
         case.warnings.append(msg)
         audit_events.append(_audit("extract_financial_features", "skipped_no_data"))
+        case.status = "fis_features_extracted"
+        case.updated_at = datetime.utcnow()
         case.audit_log.extend(audit_events)
         return {"case": case}
 
@@ -398,6 +400,8 @@ def extract_financial_features(state: AgentWorkerState) -> Dict[str, Any]:
         case.warnings.append(msg)
         case.financial_features = FinancialFeatures(warnings=[msg])
         audit_events.append(_audit("extract_financial_features", "all_docs_failed"))
+        case.status = "fis_features_extracted"
+        case.updated_at = datetime.utcnow()
         case.audit_log.extend(audit_events)
         return {"case": case}
 

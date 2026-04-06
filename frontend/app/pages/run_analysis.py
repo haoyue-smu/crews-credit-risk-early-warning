@@ -44,7 +44,7 @@ _STAGES = [
      "description"),
     ("rs",  "External Retrieval",    "Search news, filings, and market signals.",
      "language"),
-    ("sis", "Signal Intelligence",   "Extract and verify risk signals from sources.",
+    ("sis", "Signal Sourcing",   "Extract and verify risk signals from sources.",
      "neurology"),
     ("frd", "Risk Decisioning",      "Produce traffic-light verdict and report.",
      "gavel"),
@@ -53,11 +53,19 @@ _STAGE_ORDER = ["fis", "rs", "sis", "frd"]
 
 
 def _stages_complete(status: str) -> int:
-    count = 0
-    for stage, terminals in _TERMINAL_STAGE_MAP.items():
+    """Return cumulative count of completed stages based on pipeline order.
+    If a later stage is done, all prior stages are implicitly done too."""
+    # Walk backwards — return index+1 of the furthest completed stage
+    for i in range(len(_STAGE_ORDER) - 1, -1, -1):
+        stage = _STAGE_ORDER[i]
+        terminals = _TERMINAL_STAGE_MAP.get(stage, set())
         if status in terminals or f"{stage}_error" in status:
-            count += 1
-    return count
+            return i + 1
+    # Mid-stage status (e.g. fis_parsing_complete) — prior stages are done
+    for i, stage in enumerate(_STAGE_ORDER):
+        if status.startswith(stage + "_"):
+            return i
+    return 0
 
 
 def _stage_is_done(status: str, prefix: str) -> bool:
@@ -286,8 +294,23 @@ with left_col:
 
 # Progress circle slot — lives in right column
 with right_col:
+    st.markdown("""
+    <div style="text-align:center;margin-bottom:0.5rem;">
+      <div class="section-label" style="justify-content:center;margin-bottom:0.25rem;">
+        <div class="section-label-bar"></div>
+        <div class="section-label-text">Pipeline Progress</div>
+      </div>
+      <p style="font-size:0.75rem;color:#5f5e5e;margin:0;">
+        Stages completed out of 4 (FIS → RS → SIS → FRD)
+      </p>
+    </div>
+    """, unsafe_allow_html=True)
     progress_slot = st.empty()
     progress_slot.markdown(_render_circle_svg(pct, tl, current_status), unsafe_allow_html=True)
+
+# ── Polling status bar (placeholder — populated when pipeline is triggered) ───
+poll_bar_slot    = st.empty()
+poll_status_slot = st.empty()
 
 # ── Audit trail + stage cards ─────────────────────────────────────────────────
 st.markdown("<div style='height:2rem;'></div>", unsafe_allow_html=True)
@@ -387,15 +410,25 @@ if triggered:
     try:
         resp = requests.post(f"{api_base}/api/cases/{active_case}/{endpoint}", timeout=10)
         if resp.status_code == 200:
-            st.markdown(_html(f"""
-            <div style="margin-top:1.25rem;font-family:'Manrope',sans-serif;font-size:0.9375rem;
-                        font-weight:600;color:#b70100;">
+            poll_status_slot.markdown(_html(f"""
+            <div style="font-family:'Manrope',sans-serif;font-size:0.9375rem;
+                        font-weight:600;color:#b70100;margin-bottom:0.5rem;">
               {label} started — polling for completion…
             </div>
             """), unsafe_allow_html=True)
 
-            poll_bar   = st.progress(0)
-            poll_status = st.empty()
+            def _progress_bar_html(pct: float) -> str:
+                w = int(pct * 100)
+                return (
+                    f'<div style="width:100%;background:#eae7e7;border-radius:9999px;'
+                    f'height:6px;overflow:hidden;margin-bottom:0.75rem;">'
+                    f'<div style="width:{w}%;height:100%;border-radius:9999px;'
+                    f'background:linear-gradient(135deg,#b70100,#e60000);'
+                    f'transition:width 0.4s ease;"></div></div>'
+                )
+
+            poll_bar_slot.markdown(_progress_bar_html(0), unsafe_allow_html=True)
+            poll_status = poll_status_slot
 
             for i in range(120):
                 time.sleep(2)
@@ -411,7 +444,7 @@ if triggered:
                     done       = new_status in _ALL_TERMINAL
 
                     pct_poll = 1.0 if done else min((i + 1) / 60, 0.95)
-                    poll_bar.progress(pct_poll)
+                    poll_bar_slot.markdown(_progress_bar_html(pct_poll), unsafe_allow_html=True)
 
                     # ── Live update: circle + stage cards + terminal ──────────
                     new_pct = _stages_complete(new_status) / 4
@@ -450,7 +483,7 @@ if triggered:
                     )
 
                     if done:
-                        poll_bar.progress(1.0)
+                        poll_bar_slot.markdown(_progress_bar_html(1.0), unsafe_allow_html=True)
                         if "error" in new_status:
                             st.error(f"{label} failed — status: {new_status}")
                             for e in pd_data.get("errors", []):

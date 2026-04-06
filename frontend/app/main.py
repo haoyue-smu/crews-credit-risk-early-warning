@@ -628,6 +628,7 @@ h1, h2, h3, h4 {
     background: transparent !important;
 }
 
+
 /* ─── CHAT ───────────────────────────────────────────────────────────────── */
 [data-testid="stChatInput"] {
     background: #ffffff !important;
@@ -645,13 +646,12 @@ h1, h2, h3, h4 {
     box-shadow: 0 4px 16px rgba(28,27,27,0.04) !important;
 }
 
-/* ─── PROGRESS ───────────────────────────────────────────────────────────── */
-[data-testid="stProgress"] > div {
-    background: #eae7e7 !important;
-    border-radius: 9999px !important;
-}
-[data-testid="stProgress"] > div > div {
-    background: linear-gradient(135deg, #b70100 0%, #e60000 100%) !important;
+
+/* ─── SUPPORTING DOCS CARD ───────────────────────────────────────────────── */
+[data-testid="stVerticalBlockBorderWrapper"] > div {
+    background: #f6f3f2 !important;
+    border-radius: 0.75rem !important;
+    border: 1px solid rgba(233,188,181,0.15) !important;
 }
 
 /* ─── DIVIDERS ───────────────────────────────────────────────────────────── */

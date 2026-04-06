@@ -31,7 +31,7 @@ app = FastAPI(
     description=(
         "Agentic credit analysis platform — "
         "FIS (Financial Ingestion) + RS (Retrieval) + "
-        "SIS (Signal Intelligence) + FRD (Fusion & Risk Decisioning) "
+        "SIS (Signal Sourcing) + FRD (Fusion & Risk Decisioning) "
         "subgraphs via LangGraph."
     ),
     version="0.3.0",

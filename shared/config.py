@@ -24,7 +24,7 @@ from typing import Optional
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
-load_dotenv()
+load_dotenv(override=True)
 
 
 class Settings(BaseModel):

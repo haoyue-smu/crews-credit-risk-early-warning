@@ -184,7 +184,9 @@ async def plan_retrieval(state: AgentWorkerState) -> Dict[str, Any]:
         for t in coverage_topics
     )
 
+    today_str = datetime.utcnow().strftime("%Y-%m-%d")
     user_prompt = (
+        f"Today's date: {today_str}\n"
         f"Company: {company.company_name}\n"
         f"Type: {company.company_type}\n"
         f"Industry: {company.industry_sector or 'Unknown'}\n"
@@ -274,7 +276,10 @@ async def execute_searches(state: AgentWorkerState) -> Dict[str, Any]:
     tavily = _get_tavily_client()
     all_results: list[RawRetrievedItem] = []
 
-    # Map source types to Tavily params
+    # Map source types to Tavily params.
+    # No hard date cutoff at the API level — ongoing legal/regulatory events
+    # (lawsuits, investigations) may be years old but remain material.
+    # Recency is handled by scoring in source_quality_assessment instead.
     SOURCE_PARAMS = {
         "news": {"topic": "news", "search_depth": "advanced", "max_results": 5},
         "web":  {"topic": "general", "search_depth": "basic", "max_results": 5},
@@ -308,6 +313,8 @@ async def execute_searches(state: AgentWorkerState) -> Dict[str, Any]:
                 search_kwargs["topic"] = params["topic"]
             if "include_domains" in params:
                 search_kwargs["include_domains"] = params["include_domains"]
+            if "days" in params:
+                search_kwargs["days"] = params["days"]
 
             response = await loop.run_in_executor(None, lambda: tavily.search(**search_kwargs))
 
@@ -690,7 +697,7 @@ async def source_quality_assessment(state: AgentWorkerState) -> Dict[str, Any]:
         domain = urlparse(item.url).netloc.lower()
         corroboration = min(url_counts.get(domain, 1) / 3.0, 1.0)
 
-        quality = round(0.5 * domain_score + 0.3 * recency + 0.2 * corroboration, 3)
+        quality = round(0.4 * domain_score + 0.4 * recency + 0.2 * corroboration, 3)
         item.raw_payload["_quality_score"] = quality
         item.raw_payload["_domain_score"] = domain_score
         item.raw_payload["_recency_score"] = recency

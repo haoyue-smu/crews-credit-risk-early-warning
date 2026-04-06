@@ -262,57 +262,6 @@ with left_col:
             </div>
             """), unsafe_allow_html=True)
 
-    # Trend chart
-    hist_z = ff.get("historical_z_scores") or []
-    if len(hist_z) >= 2:
-        st.markdown("<div style='height:0.75rem;'></div>", unsafe_allow_html=True)
-        st.markdown(_html("""
-        <div style="background:#f6f3f2;border-radius:0.5rem;padding:1.5rem;
-                    padding-bottom:0.5rem;">
-          <div style="display:flex;justify-content:space-between;align-items:center;
-                      margin-bottom:1rem;">
-            <h4 style="font-family:'Manrope',sans-serif;font-weight:700;font-size:1rem;
-                       color:#1c1b1b;margin:0;">5-Year Leverage Trend</h4>
-            <div style="display:flex;gap:0.375rem;align-items:center;">
-              <div style="width:8px;height:8px;border-radius:9999px;background:#b70100;"></div>
-              <div style="width:8px;height:8px;border-radius:9999px;background:#d4d0ce;"></div>
-            </div>
-          </div>
-        """), unsafe_allow_html=True)
-        try:
-            import plotly.graph_objects as go
-            periods = [h.get("period_label") or str(h.get("fiscal_year", i))
-                       for i, h in enumerate(hist_z)]
-            scores  = [h.get("score") for h in hist_z]
-            valid   = [(p, s) for p, s in zip(periods, scores) if s is not None]
-            if valid:
-                xv, yv = zip(*valid)
-                fig = go.Figure()
-                fig.add_trace(go.Scatter(
-                    x=list(xv), y=list(yv),
-                    mode="lines+markers",
-                    line=dict(color="#b70100", width=2.5),
-                    marker=dict(color="#b70100", size=6),
-                    fill="tozeroy",
-                    fillcolor="rgba(183,1,0,0.07)",
-                    name="Z-Score",
-                ))
-                fig.update_layout(
-                    margin=dict(l=0, r=0, t=4, b=0),
-                    height=160,
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(family="Inter", color="#5f5e5e", size=11),
-                    showlegend=False,
-                    xaxis=dict(showgrid=False, zeroline=False),
-                    yaxis=dict(showgrid=True,
-                               gridcolor="rgba(233,188,181,0.2)", zeroline=False),
-                )
-                st.plotly_chart(fig, use_container_width=True,
-                                config={"displayModeBar": False})
-        except ImportError:
-            st.caption("Install plotly for the trend chart.")
-        st.markdown("</div>", unsafe_allow_html=True)
 
 # ── RIGHT: Qualitative ────────────────────────────────────────────────────────
 with right_col:
@@ -578,8 +527,41 @@ for col, (label, prompt) in zip(qa_cols[:3], quick_actions):
 
 # Chat history
 for msg in chat_history:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+    role = msg["role"]
+    content = msg["content"]
+    if role == "user":
+        avatar_html = (
+            '<div style="width:2rem;height:2rem;border-radius:9999px;background:#e2dfde;'
+            'display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+            '<svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 96 960 960" width="18" fill="#5f5e5e">'
+            '<path d="M480 575q-66 0-108-42t-42-108q0-66 42-108t108-42q66 0 108 42t42 108q0 66-42 108t-108 42ZM160 896v-94q0-38 19-65t49-41q67-30 130.5-45T480 636q69 0 132 15t130 45q30 14 49 41t19 65v94H160Z"/>'
+            '</svg></div>'
+        )
+        align = "flex-end"
+        bubble_bg = "#f6f3f2"
+        margin = "margin-left:3rem;"
+    else:
+        avatar_html = (
+            '<div style="width:2rem;height:2rem;border-radius:9999px;background:#b70100;'
+            'display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+            '<svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 96 960 960" width="18" fill="#ffffff">'
+            '<path d="M160 816v-460q0-24 18-42t42-18h520q24 0 42 18t18 42v320q0 24-18 42t-42 18H240L160 816Zm260-195h40v-80h80v-40h-80v-80h-40v80h-80v40h80v80Z"/>'
+            '</svg></div>'
+        )
+        align = "flex-start"
+        bubble_bg = "#ffffff"
+        margin = "margin-right:3rem;"
+
+    st.markdown(
+        f'<div style="display:flex;align-items:flex-start;gap:0.75rem;'
+        f'margin-bottom:0.75rem;flex-direction:{"row-reverse" if role == "user" else "row"};">'
+        f'{avatar_html}'
+        f'<div style="background:{bubble_bg};border-radius:0.625rem;padding:0.75rem 1rem;'
+        f'{margin}font-size:0.9375rem;line-height:1.6;color:#1c1b1b;'
+        f'border:1px solid rgba(233,188,181,0.15);box-shadow:0 2px 8px rgba(28,27,27,0.04);">'
+        f'{content}</div></div>',
+        unsafe_allow_html=True,
+    )
 
 # Chat input — use text_area + form so it stays inline (st.chat_input pins to viewport bottom)
 with st.form("chat_form", clear_on_submit=True):

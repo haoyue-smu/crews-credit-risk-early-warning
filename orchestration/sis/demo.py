@@ -285,7 +285,7 @@ def _llm_pair_explain(sa: Signal, sb: Signal) -> Dict[str, Any]:
 def main() -> None:
     st.set_page_config(page_title="SIS Pipeline Demo", layout="wide")
 
-    st.title("SIS Pipeline Demo - Credit Risk Signal Intelligence")
+    st.title("SIS Pipeline Demo - Credit Risk Signal Sourcing")
     st.write(
         "SIS extracts credit-relevant signals from unstructured documents, validates and verifies them with "
         "structured schemas, resolves cross-source conflicts, and gates evidence for FRD."

@@ -51,6 +51,11 @@ Rules:
   for a manufacturing company, or "patent_portfolio" for a tech company).
   Add 0-3 additional topics maximum.
 - Keep queries concise and search-engine-friendly.
+- Prioritise recency: use today's date (provided in the user message) to
+  anchor queries temporally. For "news", "web", "forums", and "social"
+  source types, append the current year to queries (e.g. "Acme Corp earnings
+  2025") so search engines surface recent results. Do NOT add year qualifiers
+  to "financial_filings" queries.
 """
 
 RELEVANCE_FILTER_SYSTEM = """\

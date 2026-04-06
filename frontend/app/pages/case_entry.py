@@ -35,19 +35,14 @@ with st.form("case_entry_form"):
 
     col1, col2 = st.columns(2, gap="large")
     with col1:
-        company_type = st.selectbox(
+        company_type = st.text_input(
             "ENTITY TYPE",
-            ["private", "public"],
+            placeholder="e.g. private or public",
         )
     with col2:
-        industry_sector = st.selectbox(
+        industry_sector = st.text_input(
             "INDUSTRY SECTOR",
-            [
-                "", "manufacturing", "technology", "healthcare", "retail",
-                "real_estate", "energy", "utilities", "consumer_goods",
-                "telecommunications", "financial_services", "transportation",
-                "media_entertainment",
-            ],
+            placeholder="e.g. technology, healthcare, retail...",
         )
 
     jurisdiction = st.text_input(
@@ -111,153 +106,153 @@ if submitted:
 
 # ── Supporting Documents ──────────────────────────────────────────────────────
 st.markdown("<div style='height:1.5rem;'></div>", unsafe_allow_html=True)
-st.markdown("""
-<div style="background:#f6f3f2;border-radius:0.75rem;padding:2rem 2.5rem;">
-<div style="display:flex;justify-content:space-between;align-items:flex-start;
-            margin-bottom:1.5rem;flex-wrap:wrap;gap:0.75rem;">
-  <div>
-    <div class="section-label" style="margin-bottom:0.375rem;">
-      <div class="section-label-bar"></div>
-      <div class="section-label-text">Supporting Documents</div>
-    </div>
-    <p style="font-size:0.875rem;color:#5f5e5e;margin:0;line-height:1.55;">
-      Upload 10-K, registration proofs, and recent balance sheets.
-    </p>
-  </div>
-  <div style="display:flex;gap:0.375rem;flex-wrap:wrap;">
-    <span class="chip chip-primary">PDF</span>
-    <span class="chip chip-primary">XML</span>
-    <span class="chip chip-primary">XBRL</span>
-    <span class="chip chip-gray">Max 50 MB</span>
-  </div>
-</div>
-</div>
-""", unsafe_allow_html=True)
 
-# Docs section uses native Streamlit widgets outside the HTML block
-if not active_case and not st.session_state.get("active_case_id"):
-    st.info("Create or select a case above before uploading documents.")
-else:
-    current_case = st.session_state.get("active_case_id")
-
-    col_up, col_role = st.columns([3, 1], gap="medium")
-    with col_up:
-        uploaded_files = st.file_uploader(
-            "Drag and drop financial files here",
-            type=["xml", "xbrl", "pdf"],
-            accept_multiple_files=True,
-            label_visibility="collapsed",
-        )
-    with col_role:
-        document_role = st.selectbox(
-            "DOCUMENT ROLE",
-            ["annual_report", "quarterly_report"],
-        )
-
-    if uploaded_files:
-        for uf in uploaded_files:
-            ext     = uf.name.rsplit(".", 1)[-1].upper() if "." in uf.name else "FILE"
-            size_kb = round(len(uf.getvalue()) / 1024, 1)
-            st.markdown(f"""
-            <div style="display:flex;align-items:center;gap:0.875rem;
-                        padding:0.75rem 1rem;background:#ffffff;
-                        border-radius:0.5rem;margin-bottom:0.375rem;
-                        box-shadow:0 2px 8px rgba(28,27,27,0.04);">
-              <span class="material-symbols-outlined" style="color:#b70100;">description</span>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:0.875rem;font-weight:600;color:#1c1b1b;
-                            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                  {uf.name}
-                </div>
-                <div style="font-size:0.6875rem;color:#5f5e5e;margin-top:1px;">
-                  {size_kb} KB · Ready to process
-                </div>
-              </div>
-              <span class="chip chip-blue">{ext}</span>
-            </div>
-            """, unsafe_allow_html=True)
-
-        if st.button("Upload documents", type="primary"):
-            ok, errs = [], []
-            for uf in uploaded_files:
-                try:
-                    r = requests.post(
-                        f"{api_base}/api/cases/{current_case}/documents",
-                        files={"file": (uf.name, uf.getvalue(), "application/octet-stream")},
-                        data={"document_role": document_role},
-                        timeout=30,
-                    )
-                    if r.status_code == 200:
-                        ok.append((uf.name, r.json().get("document_id", "")))
-                    else:
-                        errs.append((uf.name, r.text))
-                except requests.ConnectionError:
-                    errs.append((uf.name, "Cannot connect to API"))
-                except Exception as exc:
-                    errs.append((uf.name, str(exc)))
-
-            if ok:
-                st.markdown(f"""
-                <div style="background:rgba(21,128,61,0.07);border-radius:0.625rem;
-                            padding:0.875rem 1.25rem;margin-top:0.5rem;">
-                  <div style="font-family:'Manrope',sans-serif;font-size:0.9375rem;
-                              font-weight:700;color:#15803d;margin-bottom:0.375rem;">
-                    {len(ok)} file{'s' if len(ok) > 1 else ''} uploaded successfully
-                  </div>
-                """, unsafe_allow_html=True)
-                for fname, doc_id in ok:
-                    st.markdown(f"""
-                  <div style="font-size:0.75rem;color:#15803d;padding:1px 0;">
-                    {fname}
-                    <span style="font-family:'Courier New',monospace;margin-left:6px;opacity:0.7;">
-                      → {doc_id}
-                    </span>
-                  </div>
-                    """, unsafe_allow_html=True)
-                st.markdown("</div>", unsafe_allow_html=True)
-            for fname, msg in errs:
-                st.error(f"{fname}: {msg}")
-
-    # Uploaded documents list
-    st.markdown('<div class="atelier-hr"></div>', unsafe_allow_html=True)
+with st.container(border=True):
     st.markdown("""
-    <div class="section-label">
-      <div class="section-label-bar"></div>
-      <div class="section-label-text">Uploaded Documents</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;
+                margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;">
+      <div>
+        <div class="section-label" style="margin-bottom:0.375rem;">
+          <div class="section-label-bar"></div>
+          <div class="section-label-text">Supporting Documents</div>
+        </div>
+        <p style="font-size:0.875rem;color:#5f5e5e;margin:0;line-height:1.55;">
+          Upload 10-K, registration proofs, and recent balance sheets.
+        </p>
+      </div>
+      <div style="display:flex;gap:0.375rem;flex-wrap:wrap;">
+        <span class="chip chip-primary">PDF</span>
+        <span class="chip chip-primary">XML</span>
+        <span class="chip chip-primary">XBRL</span>
+        <span class="chip chip-gray">Max 50 MB</span>
+      </div>
     </div>
     """, unsafe_allow_html=True)
 
-    try:
-        r = requests.get(f"{api_base}/api/cases/{current_case}/result", timeout=5)
-        if r.status_code == 200:
-            docs = r.json().get("uploaded_financial_documents", [])
-            if not docs:
-                st.markdown("""
-                <div style="padding:1.5rem;text-align:center;color:#5f5e5e;font-size:0.875rem;">
-                  No documents uploaded yet.
+    if not active_case and not st.session_state.get("active_case_id"):
+        st.info("Create or select a case above before uploading documents.")
+    else:
+        current_case = st.session_state.get("active_case_id")
+
+        col_up, col_role = st.columns([3, 1], gap="medium")
+        with col_up:
+            uploaded_files = st.file_uploader(
+                "Drag and drop financial files here",
+                type=["xml", "xbrl", "pdf"],
+                accept_multiple_files=True,
+                label_visibility="collapsed",
+            )
+        with col_role:
+            document_role = st.text_input(
+                "DOCUMENT ROLE",
+                placeholder="e.g. annual_report, quarterly_report",
+                value="annual_report",
+            )
+
+        if uploaded_files:
+            for uf in uploaded_files:
+                ext     = uf.name.rsplit(".", 1)[-1].upper() if "." in uf.name else "FILE"
+                size_kb = round(len(uf.getvalue()) / 1024, 1)
+                st.markdown(f"""
+                <div style="display:flex;align-items:center;gap:0.875rem;
+                            padding:0.75rem 1rem;background:#ffffff;
+                            border-radius:0.5rem;margin-bottom:0.375rem;
+                            box-shadow:0 2px 8px rgba(28,27,27,0.04);">
+                  <span class="material-symbols-outlined" style="color:#b70100;">description</span>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:0.875rem;font-weight:600;color:#1c1b1b;
+                                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                      {uf.name}
+                    </div>
+                    <div style="font-size:0.6875rem;color:#5f5e5e;margin-top:1px;">
+                      {size_kb} KB · Ready to process
+                    </div>
+                  </div>
+                  <span class="chip chip-blue">{ext}</span>
                 </div>
                 """, unsafe_allow_html=True)
-            else:
-                for doc in docs:
-                    ext    = doc.get("file_type", "?").upper()
-                    role   = doc.get("document_role", "—").replace("_", " ").title()
-                    doc_id = doc.get("document_id", "")[:16] + "…"
+
+            if st.button("Upload documents", type="primary"):
+                ok, errs = [], []
+                for uf in uploaded_files:
+                    try:
+                        r = requests.post(
+                            f"{api_base}/api/cases/{current_case}/documents",
+                            files={"file": (uf.name, uf.getvalue(), "application/octet-stream")},
+                            data={"document_role": document_role},
+                            timeout=30,
+                        )
+                        if r.status_code == 200:
+                            ok.append((uf.name, r.json().get("document_id", "")))
+                        else:
+                            errs.append((uf.name, r.text))
+                    except requests.ConnectionError:
+                        errs.append((uf.name, "Cannot connect to API"))
+                    except Exception as exc:
+                        errs.append((uf.name, str(exc)))
+
+                if ok:
                     st.markdown(f"""
-                    <div style="display:flex;align-items:center;gap:0.75rem;
-                                padding:0.625rem 0.875rem;background:#ffffff;
-                                border-radius:0.5rem;margin-bottom:0.375rem;
-                                box-shadow:0 2px 8px rgba(28,27,27,0.04);">
-                      <span class="chip chip-blue" style="font-size:0.625rem;">{ext}</span>
-                      <span style="flex:1;font-size:0.875rem;font-weight:500;color:#1c1b1b;">
-                        {doc['filename']}
-                      </span>
-                      <span style="font-size:0.75rem;color:#5f5e5e;">{role}</span>
-                      <span style="font-size:0.6875rem;color:#5f5e5e;
-                                   font-family:'Courier New',monospace;">{doc_id}</span>
+                    <div style="background:rgba(21,128,61,0.07);border-radius:0.625rem;
+                                padding:0.875rem 1.25rem;margin-top:0.5rem;">
+                      <div style="font-family:'Manrope',sans-serif;font-size:0.9375rem;
+                                  font-weight:700;color:#15803d;margin-bottom:0.375rem;">
+                        {len(ok)} file{'s' if len(ok) > 1 else ''} uploaded successfully
+                      </div>
+                    """, unsafe_allow_html=True)
+                    for fname, doc_id in ok:
+                        st.markdown(f"""
+                      <div style="font-size:0.75rem;color:#15803d;padding:1px 0;">
+                        {fname}
+                        <span style="font-family:'Courier New',monospace;margin-left:6px;opacity:0.7;">
+                          → {doc_id}
+                        </span>
+                      </div>
+                        """, unsafe_allow_html=True)
+                    st.markdown("</div>", unsafe_allow_html=True)
+                for fname, msg in errs:
+                    st.error(f"{fname}: {msg}")
+
+        # Uploaded documents list
+        st.markdown('<div class="atelier-hr"></div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="section-label">
+          <div class="section-label-bar"></div>
+          <div class="section-label-text">Uploaded Documents</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        try:
+            r = requests.get(f"{api_base}/api/cases/{current_case}/result", timeout=5)
+            if r.status_code == 200:
+                docs = r.json().get("uploaded_financial_documents", [])
+                if not docs:
+                    st.markdown("""
+                    <div style="padding:1.5rem;text-align:center;color:#5f5e5e;font-size:0.875rem;">
+                      No documents uploaded yet.
                     </div>
                     """, unsafe_allow_html=True)
-    except Exception:
-        pass
+                else:
+                    for doc in docs:
+                        ext    = doc.get("file_type", "?").upper()
+                        role   = doc.get("document_role", "—").replace("_", " ").title()
+                        doc_id = doc.get("document_id", "")[:16] + "…"
+                        st.markdown(f"""
+                        <div style="display:flex;align-items:center;gap:0.75rem;
+                                    padding:0.625rem 0.875rem;background:#ffffff;
+                                    border-radius:0.5rem;margin-bottom:0.375rem;
+                                    box-shadow:0 2px 8px rgba(28,27,27,0.04);">
+                          <span class="chip chip-blue" style="font-size:0.625rem;">{ext}</span>
+                          <span style="flex:1;font-size:0.875rem;font-weight:500;color:#1c1b1b;">
+                            {doc['filename']}
+                          </span>
+                          <span style="font-size:0.75rem;color:#5f5e5e;">{role}</span>
+                          <span style="font-size:0.6875rem;color:#5f5e5e;
+                                       font-family:'Courier New',monospace;">{doc_id}</span>
+                        </div>
+                        """, unsafe_allow_html=True)
+        except Exception:
+            pass
 
 # ── Existing Cases ────────────────────────────────────────────────────────────
 st.markdown("<div style='height:1.5rem;'></div>", unsafe_allow_html=True)

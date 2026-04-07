@@ -1,0 +1,688 @@
+{
+  "timestamp": "2026-04-07T09:59:53.734494",
+  "hyflux_docs": 4,
+  "extract_comparison": [
+    {
+      "model": "google/gemini-2.5-flash",
+      "test": "extract",
+      "total_signals": 33,
+      "total_prompt_tokens": 3738,
+      "total_completion_tokens": 2445,
+      "total_tokens": 6183,
+      "cost_usd": 0.007234,
+      "total_latency_seconds": 14.54,
+      "avg_latency_per_doc": 3.64,
+      "event_type_distribution": {
+        "financial_distress_signals": 7,
+        "reputation_sentiment": 2,
+        "operational_issues": 10,
+        "management_governance": 4,
+        "market_industry_risks": 1,
+        "positive_signals": 9
+      },
+      "severity_distribution": {
+        "high": 6,
+        "medium": 18,
+        "positive": 9
+      },
+      "key_signals_found": {
+        "debt_restructuring": true,
+        "employee_dissatisfaction": true,
+        "asset_sale_difficulty": true,
+        "company_denial": true
+      },
+      "doc_results": [
+        {
+          "document_id": "doc_001",
+          "signal_count": 5,
+          "signals": [
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "court_supervised_restructuring_application",
+              "severity": "high",
+              "extraction_text": "Hyflux Ltd, which has been grappling with mounting liabilities and the fallout from its troubled pro"
+            },
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "debt_restructuring_application",
+              "severity": "high",
+              "extraction_text": "Hyflux filed its application in May 2018 to the Singapore High Court under Section 211B for a court-"
+            },
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "default_on_interest_payment",
+              "severity": "high",
+              "extraction_text": "The filing showed Hyflux had defaulted on the S$14.9 million perpetual securities interest payment d"
+            },
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "deterioration_of_equity_value",
+              "severity": "high",
+              "extraction_text": "the bankable value of Hyflux's equity had deteriorated sharply."
+            },
+            {
+              "event_type": "reputation_sentiment",
+              "event_subtype": "negative_market_sentiment",
+              "severity": "medium",
+              "extraction_text": "Analysts pointed to how quickly sentiment shifted following disclosures on funding pressures, projec"
+            }
+          ],
+          "prompt_tokens": 945,
+          "completion_tokens": 406,
+          "latency_seconds": 3.69
+        },
+        {
+          "document_id": "doc_002",
+          "signal_count": 12,
+          "signals": [
+            {
+              "event_type": "operational_issues",
+              "event_subtype": "employee_morale_decline",
+              "severity": "medium",
+              "extraction_text": "Morale at Hyflux has been low for months."
+            },
+            {
+              "event_type": "management_governance",
+              "event_subtype": "management_direction_uncertainty",
+              "severity": "medium",
+              "extraction_text": "Management's direction feels uncertain"
+            },
+            {
+              "event_type": "operational_issues",
+              "event_subtype": "employee_concern_company_future",
+              "severity": "medium",
+              "extraction_text": "people are worried about the company's future."
+            },
+            {
+              "event_type": "operational_issues",
+              "event_subtype": "work_stoppage_due_to_uncertainty",
+              "severity": "medium",
+              "extraction_text": "Several teams say they are holding back work until decisions are clarified."
+            },
+            {
+              "event_type": "management_governance",
+              "event_subtype": "management_uncertainty",
+              "severity": "medium",
+              "extraction_text": "There is a lot of management uncertainty."
+            },
+            {
+              "event_type": "operational_issues",
+              "event_subtype": "project_timeline_slippage",
+              "severity": "medium",
+              "extraction_text": "Project timelines keep slipping because priorities change"
+            },
+            {
+              "event_type": "operational_issues",
+              "event_subtype": "employee_morale_decline",
+              "severity": "medium",
+              "extraction_text": "Low morale shows in day-to-day collaboration."
+            },
+            {
+              "event_type": "operational_issues",
+              "event_subtype": "employee_concern_company_recovery",
+              "severity": "medium",
+              "extraction_text": "People are concerned the company will not recover"
+            },
+            {
+              "event_type": "management_governance",
+              "event_subtype": "lack_of_turnaround_plan_clarity",
+              "severity": "medium",
+              "extraction_text": "the lack of clarity around turnaround plans affects engagement."
+            },
+            {
+              "event_type": "operational_issues",
+              "event_subtype": "initiative_postponement",
+              "severity": "medium",
+              "extraction_text": "Several initiatives have been postponed repeatedly, including key deliverables that were supposed to"
+            },
+            {
+              "event_type": "operational_issues",
+              "event_subtype": "organization_stretched_thin",
+              "severity": "medium",
+              "extraction_text": "Many employees feel the organization is stretched thin"
+            },
+            {
+              "event_type": "management_governance",
+              "event_subtype": "unclear_future_plans",
+              "severity": "medium",
+              "extraction_text": "future plans remain unclear."
+            }
+          ],
+          "prompt_tokens": 868,
+          "completion_tokens": 735,
+          "latency_seconds": 3.47
+        },
+        {
+          "document_id": "doc_003",
+          "signal_count": 7,
+          "signals": [
+            {
+              "event_type": "operational_issues",
+              "event_subtype": "asset_sale_struggle",
+              "severity": "medium",
+              "extraction_text": "Hyflux's Tuaspring desalination plant has struggled to attract a buyer"
+            },
+            {
+              "event_type": "operational_issues",
+              "event_subtype": "prolonged_uncertainty_over_obligations",
+              "severity": "medium",
+              "extraction_text": "delays in finding a buyer had prolonged uncertainty over who would take over the plant's operating o"
+            },
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "financing_costs_and_upkeep_weighing_on_balance_sheet",
+              "severity": "medium",
+              "extraction_text": "extending the period during which financing costs and upkeep continued to weigh on its balance sheet"
+            },
+            {
+              "event_type": "market_industry_risks",
+              "event_subtype": "depressing_electricity_prices",
+              "severity": "medium",
+              "extraction_text": "Oversupply of gas has been depressing electricity prices, making it harder for energy-related busine"
+            },
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "continued_losses_from_energy_business",
+              "severity": "high",
+              "extraction_text": "Hyflux reported continued losses from its energy business and related activities, compounding stress"
+            },
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "reduced_likelihood_of_near_term_cash_generation",
+              "severity": "high",
+              "extraction_text": "delays and weak pricing conditions reduced the likelihood of near-term cash generation that could su"
+            },
+            {
+              "event_type": "reputation_sentiment",
+              "event_subtype": "cautious_stance_from_potential_buyers",
+              "severity": "medium",
+              "extraction_text": "potential buyers and counterparties have taken a cautious stance, preferring more clarity on contrac"
+            }
+          ],
+          "prompt_tokens": 903,
+          "completion_tokens": 555,
+          "latency_seconds": 3.41
+        },
+        {
+          "document_id": "doc_004",
+          "signal_count": 9,
+          "signals": [
+            {
+              "event_type": "positive_signals",
+              "event_subtype": "denial_of_debt_restructuring_rumors",
+              "severity": "positive",
+              "extraction_text": "Hyflux has not filed any formal application for court-supervised debt restructuring with the Singapo"
+            },
+            {
+              "event_type": "positive_signals",
+              "event_subtype": "denial_of_insolvency_proceedings",
+              "severity": "positive",
+              "extraction_text": "Hyflux emphasises that it is not party to insolvency proceedings of that nature and that official co"
+            },
+            {
+              "event_type": "positive_signals",
+              "event_subtype": "governance_and_disclosure_reaffirmation",
+              "severity": "positive",
+              "extraction_text": "the group's governance and disclosure practices remain aligned with listing rules."
+            },
+            {
+              "event_type": "positive_signals",
+              "event_subtype": "operations_reaffirmation",
+              "severity": "positive",
+              "extraction_text": "operations across Hyflux's desalination, water treatment, and related energy activities are running "
+            },
+            {
+              "event_type": "positive_signals",
+              "event_subtype": "payment_obligations_reaffirmation",
+              "severity": "positive",
+              "extraction_text": "all material payment obligations that have come due, including scheduled payments on its capital ins"
+            },
+            {
+              "event_type": "positive_signals",
+              "event_subtype": "refinancing_discussions_clarification",
+              "severity": "positive",
+              "extraction_text": "ongoing refinancing and liquidity discussions, which it describes as routine engagement with adviser"
+            },
+            {
+              "event_type": "positive_signals",
+              "event_subtype": "asset_divestment_clarification",
+              "severity": "positive",
+              "extraction_text": "divestments and marketing of selected assets\u2014including discussions around certain plant and infrastr"
+            },
+            {
+              "event_type": "positive_signals",
+              "event_subtype": "denial_of_alarmist_interpretations",
+              "severity": "positive",
+              "extraction_text": "Hyflux dismisses alarmist interpretations as unfounded and urges investors to rely solely on regulat"
+            },
+            {
+              "event_type": "positive_signals",
+              "event_subtype": "capital_structure_review_clarification",
+              "severity": "positive",
+              "extraction_text": "voluntary capital-structure reviews are common for listed enterprises and do not imply court-supervi"
+            }
+          ],
+          "prompt_tokens": 1022,
+          "completion_tokens": 749,
+          "latency_seconds": 3.97
+        }
+      ]
+    },
+    {
+      "model": "openai/gpt-4o-mini",
+      "test": "extract",
+      "total_signals": 16,
+      "total_prompt_tokens": 3578,
+      "total_completion_tokens": 1139,
+      "total_tokens": 4717,
+      "cost_usd": 0.00122,
+      "total_latency_seconds": 21.95,
+      "avg_latency_per_doc": 5.49,
+      "event_type_distribution": {
+        "financial_distress_signals": 6,
+        "market_industry_risks": 2,
+        "operational_issues": 4,
+        "positive_signals": 4
+      },
+      "severity_distribution": {
+        "high": 3,
+        "medium": 9,
+        "positive": 4
+      },
+      "key_signals_found": {
+        "debt_restructuring": true,
+        "employee_dissatisfaction": true,
+        "asset_sale_difficulty": true,
+        "company_denial": true
+      },
+      "doc_results": [
+        {
+          "document_id": "doc_001",
+          "signal_count": 4,
+          "signals": [
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "court_supervised_restructuring",
+              "severity": "high",
+              "extraction_text": "Hyflux Ltd, which has been grappling with mounting liabilities and the fallout from its troubled pro"
+            },
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "default_on_interest_payment",
+              "severity": "high",
+              "extraction_text": "The filing showed Hyflux had defaulted on the S$14.9 million perpetual securities interest payment d"
+            },
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "deterioration_of_equity_value",
+              "severity": "medium",
+              "extraction_text": "Separately, the bankable value of Hyflux's equity had deteriorated sharply."
+            },
+            {
+              "event_type": "market_industry_risks",
+              "event_subtype": "shifting_sentiment",
+              "severity": "medium",
+              "extraction_text": "Analysts pointed to how quickly sentiment shifted following disclosures on funding pressures, projec"
+            }
+          ],
+          "prompt_tokens": 901,
+          "completion_tokens": 286,
+          "latency_seconds": 5.34
+        },
+        {
+          "document_id": "doc_002",
+          "signal_count": 4,
+          "signals": [
+            {
+              "event_type": "operational_issues",
+              "event_subtype": "employee_morale_concerns",
+              "severity": "medium",
+              "extraction_text": "Morale at Hyflux has been low for months. Management's direction feels uncertain, and people are wor"
+            },
+            {
+              "event_type": "operational_issues",
+              "event_subtype": "management_uncertainty",
+              "severity": "medium",
+              "extraction_text": "There is a lot of management uncertainty. Project timelines keep slipping because priorities change,"
+            },
+            {
+              "event_type": "operational_issues",
+              "event_subtype": "low_morale_impact",
+              "severity": "medium",
+              "extraction_text": "Low morale shows in day-to-day collaboration. People are concerned the company will not recover, and"
+            },
+            {
+              "event_type": "operational_issues",
+              "event_subtype": "postponed_initiatives",
+              "severity": "medium",
+              "extraction_text": "Several initiatives have been postponed repeatedly, including key deliverables that were supposed to"
+            }
+          ],
+          "prompt_tokens": 823,
+          "completion_tokens": 282,
+          "latency_seconds": 5.77
+        },
+        {
+          "document_id": "doc_003",
+          "signal_count": 4,
+          "signals": [
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "continued_losses",
+              "severity": "high",
+              "extraction_text": "Hyflux reported continued losses from its energy business and related activities, compounding stress"
+            },
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "uncertainty_over_buyer",
+              "severity": "medium",
+              "extraction_text": "delays in finding a buyer had prolonged uncertainty over who would take over the plant's operating o"
+            },
+            {
+              "event_type": "market_industry_risks",
+              "event_subtype": "energy_market_pressure",
+              "severity": "medium",
+              "extraction_text": "Energy market conditions have also added pressure to the economics of desalination-linked power gene"
+            },
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "asset_disposition_delays",
+              "severity": "medium",
+              "extraction_text": "delays and weak pricing conditions reduced the likelihood of near-term cash generation that could su"
+            }
+          ],
+          "prompt_tokens": 868,
+          "completion_tokens": 275,
+          "latency_seconds": 5.45
+        },
+        {
+          "document_id": "doc_004",
+          "signal_count": 4,
+          "signals": [
+            {
+              "event_type": "positive_signals",
+              "event_subtype": "denial_of_restructuring",
+              "severity": "positive",
+              "extraction_text": "Hyflux has not filed any formal application for court-supervised debt restructuring with the Singapo"
+            },
+            {
+              "event_type": "positive_signals",
+              "event_subtype": "payment_obligations_reaffirmation",
+              "severity": "positive",
+              "extraction_text": "the company further confirms that all material payment obligations that have come due, including sch"
+            },
+            {
+              "event_type": "positive_signals",
+              "event_subtype": "operations_reaffirmation",
+              "severity": "positive",
+              "extraction_text": "operations across Hyflux's desalination, water treatment, and related energy activities are running "
+            },
+            {
+              "event_type": "positive_signals",
+              "event_subtype": "denial_of_speculative_narratives",
+              "severity": "positive",
+              "extraction_text": "Hyflux dismisses alarmist interpretations as unfounded and urges investors to rely solely on regulat"
+            }
+          ],
+          "prompt_tokens": 986,
+          "completion_tokens": 296,
+          "latency_seconds": 5.39
+        }
+      ]
+    },
+    {
+      "model": "anthropic/claude-3.5-haiku",
+      "test": "extract",
+      "total_signals": 13,
+      "total_prompt_tokens": 2909,
+      "total_completion_tokens": 1051,
+      "total_tokens": 3960,
+      "cost_usd": 0.006531,
+      "total_latency_seconds": 16.67,
+      "avg_latency_per_doc": 4.17,
+      "event_type_distribution": {
+        "financial_distress_signals": 6,
+        "market_industry_risks": 2,
+        "management_governance": 1,
+        "operational_issues": 3,
+        "reputation_sentiment": 1
+      },
+      "severity_distribution": {
+        "high": 5,
+        "medium": 8
+      },
+      "key_signals_found": {
+        "debt_restructuring": true,
+        "employee_dissatisfaction": true,
+        "asset_sale_difficulty": true,
+        "company_denial": false
+      },
+      "doc_results": [
+        {
+          "document_id": "doc_001",
+          "signal_count": 4,
+          "signals": [
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "debt_restructuring_filing",
+              "severity": "high",
+              "extraction_text": "Hyflux filed its application in May 2018 to the Singapore High Court under Section 211B for a court-"
+            },
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "payment_default",
+              "severity": "high",
+              "extraction_text": "The filing showed Hyflux had defaulted on the S$14.9 million perpetual securities interest payment d"
+            },
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "market_value_collapse",
+              "severity": "high",
+              "extraction_text": "Hyflux's market value, which had once peaked near S$2.1 billion, had since fallen to about S$165 mil"
+            },
+            {
+              "event_type": "market_industry_risks",
+              "event_subtype": "funding_credibility_concerns",
+              "severity": "medium",
+              "extraction_text": "Analysts pointed to how quickly sentiment shifted following disclosures on funding pressures, projec"
+            }
+          ],
+          "prompt_tokens": 1020,
+          "completion_tokens": 350,
+          "latency_seconds": 5.89
+        },
+        {
+          "document_id": "doc_002",
+          "signal_count": 4,
+          "signals": [
+            {
+              "event_type": "management_governance",
+              "event_subtype": "leadership_uncertainty",
+              "severity": "medium",
+              "extraction_text": "Management's direction feels uncertain, and people are worried about the company's future."
+            },
+            {
+              "event_type": "operational_issues",
+              "event_subtype": "project_delays",
+              "severity": "medium",
+              "extraction_text": "Project timelines keep slipping because priorities change, and delayed projects are blamed on leader"
+            },
+            {
+              "event_type": "reputation_sentiment",
+              "event_subtype": "employee_morale_decline",
+              "severity": "medium",
+              "extraction_text": "Morale at Hyflux has been low for months."
+            },
+            {
+              "event_type": "operational_issues",
+              "event_subtype": "strategic_planning_disruption",
+              "severity": "medium",
+              "extraction_text": "Several initiatives have been postponed repeatedly, including key deliverables that were supposed to"
+            }
+          ],
+          "prompt_tokens": 915,
+          "completion_tokens": 287,
+          "latency_seconds": 4.29
+        },
+        {
+          "document_id": "doc_003",
+          "signal_count": 5,
+          "signals": [
+            {
+              "event_type": "operational_issues",
+              "event_subtype": "asset_sale_difficulties",
+              "severity": "medium",
+              "extraction_text": "Hyflux's Tuaspring desalination plant has struggled to attract a buyer"
+            },
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "prolonged_uncertainty",
+              "severity": "medium",
+              "extraction_text": "delays in finding a buyer had prolonged uncertainty over who would take over the plant's operating o"
+            },
+            {
+              "event_type": "market_industry_risks",
+              "event_subtype": "market_conditions_pressure",
+              "severity": "medium",
+              "extraction_text": "Oversupply of gas has been depressing electricity prices, making it harder for energy-related busine"
+            },
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "continued_losses",
+              "severity": "high",
+              "extraction_text": "Hyflux reported continued losses from its energy business and related activities, compounding stress"
+            },
+            {
+              "event_type": "financial_distress_signals",
+              "event_subtype": "liquidity_challenges",
+              "severity": "high",
+              "extraction_text": "delays and weak pricing conditions reduced the likelihood of near-term cash generation that could su"
+            }
+          ],
+          "prompt_tokens": 974,
+          "completion_tokens": 414,
+          "latency_seconds": 6.49
+        },
+        {
+          "document_id": "doc_004",
+          "error": "Expecting value: line 1 column 1 (char 0)"
+        }
+      ]
+    }
+  ],
+  "conflict_comparison": [
+    {
+      "model": "google/gemini-2.5-flash",
+      "test": "conflict",
+      "input_signals": 33,
+      "output_signals": 33,
+      "nli_pairs_screened": 402,
+      "nli_contradictions_detected": 37,
+      "llm_confirmed_contradictions": 5,
+      "duplicates_merged": 0,
+      "disputed": 8,
+      "positive_auto_ambiguous": 3,
+      "contradiction_explanations": [
+        {
+          "signal_id_a": "doc_001_1_0",
+          "signal_id_b": "doc_004_1_0",
+          "explanation": "Signal A claims Hyflux filed for court-supervised debt restructuring in May 2018, while Signal B, from the company itself, explicitly denies any such filing and calls such suggestions inaccurate."
+        },
+        {
+          "signal_id_a": "doc_001_2_1",
+          "signal_id_b": "doc_004_1_0",
+          "explanation": "Signal A states a default on a specific payment, while Signal B asserts that all material payment obligations are being met, directly contradicting each other regarding the company's payment status."
+        },
+        {
+          "signal_id_a": "doc_001_1_0",
+          "signal_id_b": "doc_004_1_0",
+          "explanation": "Signal A states Hyflux filed for court-supervised debt restructuring in May 2018, while Signal B, from Hyflux itself, dismisses alarmist interpretations and implies that voluntary capital-structure reviews do not imply court-supervised restructuring, directly contradicting the filing claim."
+        },
+        {
+          "signal_id_a": "doc_003_3_2",
+          "signal_id_b": "doc_004_2_1",
+          "explanation": "Signal A states that adverse market conditions are making it harder for Hyflux's energy-related businesses to remain profitable, while Signal B asserts that operations across Hyflux's energy activities are running normally and meeting commercial schedules."
+        },
+        {
+          "signal_id_a": "doc_003_4_3",
+          "signal_id_b": "doc_004_2_1",
+          "explanation": "Signal A reports continued losses from the energy business, while Signal B states that operations across all activities, including energy, are running normally and meeting commitments, directly contradicting the financial health of the energy segment."
+        }
+      ],
+      "total_latency_seconds": 468.0
+    },
+    {
+      "model": "google/gemini-2.5-pro",
+      "test": "conflict",
+      "input_signals": 33,
+      "output_signals": 33,
+      "nli_pairs_screened": 402,
+      "nli_contradictions_detected": 37,
+      "llm_confirmed_contradictions": 5,
+      "duplicates_merged": 0,
+      "disputed": 8,
+      "positive_auto_ambiguous": 3,
+      "contradiction_explanations": [
+        {
+          "signal_id_a": "doc_001_1_0",
+          "signal_id_b": "doc_004_1_0",
+          "explanation": "Signal A claims Hyflux filed for court-supervised debt restructuring in May 2018, while Signal B, from the company itself, explicitly denies any such filing and calls such suggestions inaccurate."
+        },
+        {
+          "signal_id_a": "doc_001_1_0",
+          "signal_id_b": "doc_004_1_0",
+          "explanation": "Signal A states Hyflux filed for court-supervised debt restructuring in May 2018, while Signal B, from Hyflux itself, dismisses alarmist interpretations and implies that voluntary capital-structure reviews do not imply court-supervised restructuring, directly contradicting the filing claim."
+        },
+        {
+          "signal_id_a": "doc_001_2_1",
+          "signal_id_b": "doc_004_1_0",
+          "explanation": "Signal A states a default on a specific payment, while Signal B asserts that all material payment obligations are being met, directly contradicting each other regarding the company's payment status."
+        },
+        {
+          "signal_id_a": "doc_003_3_2",
+          "signal_id_b": "doc_004_2_1",
+          "explanation": "Signal A states that adverse market conditions are making it harder for Hyflux's energy-related businesses to remain profitable, while Signal B asserts that operations across Hyflux's energy activities are running normally and meeting commercial schedules."
+        },
+        {
+          "signal_id_a": "doc_003_4_3",
+          "signal_id_b": "doc_004_2_1",
+          "explanation": "Signal A reports continued losses from the energy business, while Signal B states that operations, including energy activities, are running normally and meeting commitments, presenting a direct factual conflict regarding the financial health and operational status of the energy business."
+        }
+      ],
+      "total_latency_seconds": 312.11
+    }
+  ],
+  "pricing_table": {
+    "google/gemini-2.5-flash": {
+      "input_per_1M": 0.3,
+      "output_per_1M": 2.5
+    },
+    "openai/gpt-4o-mini": {
+      "input_per_1M": 0.15,
+      "output_per_1M": 0.6
+    },
+    "anthropic/claude-3.5-haiku": {
+      "input_per_1M": 0.7999999999999999,
+      "output_per_1M": 4.0
+    },
+    "google/gemini-2.5-pro": {
+      "input_per_1M": 1.25,
+      "output_per_1M": 10.0
+    }
+  },
+  "selection_rationale": {
+    "filter_1_compliance": "MAS regulatory requirements limit LLM providers to those with financial-industry compliance certifications (SOC 2, ISO 27001) and clear data residency guarantees. This narrows the field to Google, OpenAI, and Anthropic.",
+    "filter_2_task_profile": "Extract node = high-volume structured extraction \u2192 workhorse tier. Conflict node = semantic reasoning \u2192 workhorse vs premium comparison.",
+    "models_tested": {
+      "extract": [
+        "google/gemini-2.5-flash",
+        "openai/gpt-4o-mini",
+        "anthropic/claude-3.5-haiku"
+      ],
+      "conflict": [
+        "google/gemini-2.5-flash (workhorse)",
+        "google/gemini-2.5-pro (premium)"
+      ]
+    }
+  }
+}

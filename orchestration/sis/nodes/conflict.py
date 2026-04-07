@@ -1,7 +1,8 @@
 """SIS conflict resolution node (Phase 3).
 
 Stage 1: deterministic cross-document merge for identical event_subtype (no ML).
-Stage 2: CrossEncoder NLI screens all cross-document snippet pairs (local, batched).
+Stage 1.5: embedding cosine similarity pre-filter — skip pairs with low semantic overlap.
+Stage 2: CrossEncoder NLI screens remaining cross-document snippet pairs (local, batched).
 Stage 3: LLM confirms NLI candidates via ``_build_pair_prompt`` (OpenRouter/OpenAI SDK).
 """
 
@@ -29,6 +30,74 @@ NLI_CONTRADICTION_INDEX = 0
 
 # Cap evidence items per signal to prevent O(n) growth during merging/resolution.
 MAX_EVIDENCE_PER_SIGNAL: int = 5
+
+# Embedding pre-filter: pairs below this cosine similarity are skipped before NLI.
+# Low threshold (0.25) to avoid false negatives — only skip obviously unrelated pairs.
+EMBEDDING_SIMILARITY_THRESHOLD: float = 0.15
+EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
+
+
+def _embedding_prefilter(
+    working: List[Dict[str, Any]],
+    cross_pairs: List[Tuple[int, int]],
+    threshold: float = EMBEDDING_SIMILARITY_THRESHOLD,
+) -> Tuple[List[Tuple[int, int]], int]:
+    """Pre-filter cross-doc pairs using fast embedding cosine similarity.
+
+    Computes embeddings for all unique snippets (O(n)), then filters pairs
+    by cosine similarity. Only pairs above the threshold proceed to the
+    expensive NLI cross-encoder. This reduces O(n²) NLI calls dramatically.
+
+    Returns:
+        (filtered_pairs, pairs_skipped)
+    """
+    if not cross_pairs:
+        return cross_pairs, 0
+
+    try:
+        from sentence_transformers import SentenceTransformer
+    except ModuleNotFoundError:
+        # Fallback: skip pre-filter if sentence-transformers not available
+        return cross_pairs, 0
+
+    # Collect unique snippet indices
+    snippet_indices: set[int] = set()
+    for ia, ib in cross_pairs:
+        snippet_indices.add(ia)
+        snippet_indices.add(ib)
+
+    # Build snippet list in index order
+    sorted_indices = sorted(snippet_indices)
+    idx_to_pos = {idx: pos for pos, idx in enumerate(sorted_indices)}
+    snippets = [_primary_evidence_snippet(working[idx]["signal"]) for idx in sorted_indices]
+
+    # Encode all snippets at once (fast — ~1s for 100 snippets)
+    model = SentenceTransformer(EMBEDDING_MODEL_NAME)
+    embeddings = model.encode(snippets, convert_to_numpy=True, show_progress_bar=False)
+
+    # Normalize for cosine similarity
+    norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+    norms = np.where(norms == 0, 1, norms)
+    embeddings = embeddings / norms
+
+    # Filter pairs by cosine similarity
+    filtered: List[Tuple[int, int]] = []
+    skipped = 0
+    for ia, ib in cross_pairs:
+        pos_a = idx_to_pos[ia]
+        pos_b = idx_to_pos[ib]
+        sim = float(np.dot(embeddings[pos_a], embeddings[pos_b]))
+        if sim >= threshold:
+            filtered.append((ia, ib))
+        else:
+            skipped += 1
+
+    print(
+        f"[EMBEDDING] Pre-filtered {len(cross_pairs)} pairs → "
+        f"{len(filtered)} above threshold ({threshold}), "
+        f"{skipped} skipped"
+    )
+    return filtered, skipped
 
 
 def _load_cross_encoder():
@@ -429,13 +498,17 @@ def conflict_resolution(
     duplicates_merged += s1_removed
 
     cross_pairs = _build_all_cross_document_pairs(working, docs_by_id)
-    nli_pairs_screened = len(cross_pairs)
+    total_cross_pairs = len(cross_pairs)
     nli_contradictions_detected = 0
     llm_confirmed = 0
     contradictions_found = 0
     contradiction_explanations: List[Dict[str, str]] = []
 
     nli_candidate_pairs: List[Tuple[int, int, float]] = []
+
+    # Stage 1.5: embedding pre-filter — skip obviously unrelated pairs
+    cross_pairs, embedding_skipped = _embedding_prefilter(working, cross_pairs)
+    nli_pairs_screened = len(cross_pairs)
 
     if cross_pairs:
         nli_model = _load_cross_encoder()
@@ -545,6 +618,8 @@ def conflict_resolution(
         "contradictions_found": contradictions_found,
         "disputed": disputed_count,
         "positive_auto_ambiguous": positive_auto_ambiguous,
+        "total_cross_pairs": total_cross_pairs,
+        "embedding_skipped": embedding_skipped,
         "nli_pairs_screened": nli_pairs_screened,
         "nli_contradictions_detected": nli_contradictions_detected,
         "llm_confirmed": llm_confirmed,

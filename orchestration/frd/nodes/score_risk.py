@@ -273,7 +273,7 @@ def _base_traffic_light(
 ) -> TrafficLight:
     if high_met >= config.high_criteria_for_red or medium_met >= config.medium_criteria_for_red:
         return TrafficLight.red
-    if medium_met >= config.medium_criteria_for_amber or low_met >= config.low_criteria_for_amber:
+    if high_met >= 1 or medium_met >= config.medium_criteria_for_amber or low_met >= config.low_criteria_for_amber:
         return TrafficLight.amber
     return TrafficLight.green
 

@@ -1,4 +1,4 @@
-"""UBS Credit Assessment — Streamlit entry point.
+"""CREWS (Credit Risk Early Warning System) — Streamlit entry point.
 
 Design system: "The Financial Atelier" matching reference_fe/*.html exactly.
 """
@@ -7,7 +7,7 @@ import os
 import streamlit as st
 
 st.set_page_config(
-    page_title="UBS Credit Assessment",
+    page_title="CREWS — Credit Risk Early Warning",
     page_icon="🔴",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -122,7 +122,7 @@ h1, h2, h3, h4 {
 }
 
 /* ─── NAVIGATION ─────────────────────────────────────────────────────────── */
-.ubs-nav-bar {
+.crews-nav-bar {
     position: sticky;
     top: 0;
     left: 0;
@@ -140,16 +140,16 @@ h1, h2, h3, h4 {
     margin: 0 -2rem;
     width: calc(100% + 4rem);
 }
-.ubs-nav-logo {
+.crews-nav-logo {
     font-family: 'Manrope', sans-serif !important;
     font-size: 1.375rem !important;
     font-weight: 800 !important;
-    color: #b70100 !important;
+    color: #334155 !important;
     letter-spacing: -0.04em;
     line-height: 1;
 }
-.ubs-nav-links { display: flex; align-items: stretch; height: 64px; gap: 0; }
-.ubs-nav-link {
+.crews-nav-links { display: flex; align-items: stretch; height: 64px; gap: 0; }
+.crews-nav-link {
     display: flex;
     align-items: center;
     padding: 0 1.25rem;
@@ -167,13 +167,13 @@ h1, h2, h3, h4 {
     border-right: none;
     height: 100%;
 }
-.ubs-nav-link:hover { color: #1c1b1b !important; }
-.ubs-nav-link.active {
-    color: #b70100 !important;
-    border-bottom-color: #b70100;
+.crews-nav-link:hover { color: #1c1b1b !important; }
+.crews-nav-link.active {
+    color: #334155 !important;
+    border-bottom-color: #334155;
     font-weight: 600;
 }
-.ubs-nav-account {
+.crews-nav-account {
     color: #5f5e5e !important;
     font-size: 1.5rem;
     vertical-align: middle;
@@ -201,12 +201,12 @@ h1, h2, h3, h4 {
 .nav-btn-wrap [data-testid="stButton"] > button:hover {
     color: #1c1b1b !important;
     background: transparent !important;
-    border-bottom-color: rgba(183,1,0,0.2) !important;
+    border-bottom-color: rgba(51,65,85,0.2) !important;
 }
 .nav-btn-active [data-testid="stButton"] > button,
 .nav-btn-active [data-testid="stButton"] > button:hover {
-    color: #b70100 !important;
-    border-bottom-color: #b70100 !important;
+    color: #334155 !important;
+    border-bottom-color: #334155 !important;
     font-weight: 600 !important;
     background: transparent !important;
 }
@@ -248,7 +248,7 @@ h1, h2, h3, h4 {
 .section-label-bar {
     width: 1.5px;
     height: 1.25rem;
-    background: #b70100;
+    background: #334155;
     border-radius: 2px;
     flex-shrink: 0;
 }
@@ -274,7 +274,7 @@ h1, h2, h3, h4 {
     margin-top: 2.5rem;
 }
 .page-breadcrumb span { color: #5f5e5e !important; }
-.page-breadcrumb .bc-active { color: #b70100 !important; font-weight: 700; }
+.page-breadcrumb .bc-active { color: #334155 !important; font-weight: 700; }
 .page-heading {
     font-family: 'Manrope', sans-serif;
     font-size: 3rem;
@@ -326,7 +326,7 @@ h1, h2, h3, h4 {
 }
 [data-testid="stTextInput"] input:focus,
 [data-baseweb="input"] input:focus {
-    border-bottom: 2px solid #b70100 !important;
+    border-bottom: 2px solid #334155 !important;
     box-shadow: none !important;
     outline: none !important;
 }
@@ -365,7 +365,7 @@ h1, h2, h3, h4 {
 }
 [data-baseweb="select"] > div:focus,
 [data-baseweb="select"] > div[aria-expanded="true"] {
-    border-bottom: 2px solid #b70100 !important;
+    border-bottom: 2px solid #334155 !important;
     outline: none !important;
 }
 [data-baseweb="popover"] {
@@ -387,7 +387,7 @@ h1, h2, h3, h4 {
 [data-baseweb="menu"] [role="option"]:hover,
 [data-baseweb="menu"] [aria-selected="true"] {
     background: #f6f3f2 !important;
-    color: #b70100 !important;
+    color: #334155 !important;
 }
 [data-baseweb="select"] svg { fill: #5f5e5e !important; }
 
@@ -404,7 +404,7 @@ h1, h2, h3, h4 {
 [data-baseweb="textarea"] textarea {
     background: #f6f3f2 !important;
     border: none !important;
-    border-bottom: 2px solid rgba(183,1,0,0.25) !important;
+    border-bottom: 2px solid rgba(51,65,85,0.25) !important;
     border-radius: 0.5rem !important;
     box-shadow: none !important;
     outline: none !important;
@@ -418,7 +418,7 @@ h1, h2, h3, h4 {
 }
 [data-testid="stTextArea"] > div > div > textarea:focus,
 [data-baseweb="textarea"] textarea:focus {
-    border-bottom: 2px solid #b70100 !important;
+    border-bottom: 2px solid #334155 !important;
     outline: none !important;
     box-shadow: none !important;
 }
@@ -450,7 +450,7 @@ h1, h2, h3, h4 {
 [data-testid="stButton"] button[kind="primary"],
 [data-testid="stDownloadButton"] button[kind="primary"],
 [data-testid="stFormSubmitButton"] button[kind="primary"] {
-    background: linear-gradient(135deg, #b70100 0%, #e60000 100%) !important;
+    background: linear-gradient(135deg, #334155 0%, #475569 100%) !important;
     color: #ffffff !important;
     border-radius: 0.75rem !important;
     box-shadow: 0 8px 32px 0 rgba(28,27,27,0.1) !important;
@@ -463,7 +463,7 @@ h1, h2, h3, h4 {
 [data-testid="stDownloadButton"] button[kind="primary"]:hover,
 [data-testid="stFormSubmitButton"] button[kind="primary"]:hover {
     opacity: 0.9 !important;
-    background: linear-gradient(135deg, #b70100 0%, #e60000 100%) !important;
+    background: linear-gradient(135deg, #334155 0%, #475569 100%) !important;
     color: #ffffff !important;
 }
 [data-testid="stButton"] button[kind="primary"]:active {
@@ -512,12 +512,12 @@ h1, h2, h3, h4 {
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
-.chip-red    { background: rgba(183,1,0,0.08);     color: #b70100 !important; }
+.chip-red    { background: rgba(185,28,28,0.08);     color: #b91c1c !important; }
 .chip-amber  { background: rgba(217,119,6,0.10);  color: #d97706 !important; }
 .chip-green  { background: rgba(21,128,61,0.08);  color: #15803d !important; }
 .chip-blue   { background: rgba(37,99,235,0.08);  color: #2563eb !important; }
 .chip-gray   { background: rgba(95,94,94,0.08);   color: #5f5e5e !important; }
-.chip-primary{ background: rgba(183,1,0,0.08);    color: #b70100 !important; }
+.chip-primary{ background: rgba(51,65,85,0.08);    color: #334155 !important; }
 
 /* ─── TERMINAL CARD ──────────────────────────────────────────────────────── */
 .terminal-card {
@@ -545,12 +545,12 @@ h1, h2, h3, h4 {
 }
 .terminal-body * { color: inherit !important; font-family: inherit !important; }
 .tl-time  { color: rgba(212,208,206,0.35) !important; font-size: 0.6875rem; flex-shrink: 0; }
-.tl-init  { color: #b70100 !important; font-weight: 700; font-size: 0.6875rem; }
+.tl-init  { color: #94a3b8 !important; font-weight: 700; font-size: 0.6875rem; }
 .tl-query { color: #eab308 !important; font-weight: 700; font-size: 0.6875rem; }
 .tl-ret   { color: #60a5fa !important; font-weight: 700; font-size: 0.6875rem; }
 .tl-comp  { color: #4ade80 !important; font-weight: 700; font-size: 0.6875rem; }
 .tl-msg   { color: #d4d0ce !important; }
-.tl-active{ background: rgba(183,1,0,0.06); border-left: 2px solid #b70100; padding-left: 0.75rem; }
+.tl-active{ background: rgba(51,65,85,0.06); border-left: 2px solid #334155; padding-left: 0.75rem; }
 
 /* ─── METRICS ────────────────────────────────────────────────────────────── */
 [data-testid="metric-container"] {
@@ -622,8 +622,8 @@ h1, h2, h3, h4 {
     border-radius: 0 !important;
 }
 [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
-    color: #b70100 !important;
-    border-bottom: 2px solid #b70100 !important;
+    color: #334155 !important;
+    border-bottom: 2px solid #334155 !important;
     font-weight: 600 !important;
     background: transparent !important;
 }
@@ -673,7 +673,7 @@ h1, h2, h3, h4 {
     margin-bottom: 0.625rem;
     border-left: 4px solid #e9bcb5;
 }
-.sig-high    { border-left-color: #b70100; }
+.sig-high    { border-left-color: #b91c1c; }
 .sig-medium  { border-left-color: #b47800; }
 .sig-low     { border-left-color: #5f5e5e; }
 .sig-positive{ border-left-color: #15803d; }
@@ -689,13 +689,13 @@ h1, h2, h3, h4 {
 }
 .stage-running  { border-top-color: #2563eb; }
 .stage-complete { border-top-color: #15803d; }
-.stage-error    { border-top-color: #b70100; }
+.stage-error    { border-top-color: #b91c1c; }
 .stage-abbr {
     font-size: 0.5625rem;
     font-weight: 800;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #b70100 !important;
+    color: #334155 !important;
 }
 .stage-name {
     font-family: 'Manrope', sans-serif;
@@ -723,9 +723,9 @@ h1, h2, h3, h4 {
 
 /* ─── MISC UTILS ─────────────────────────────────────────────────────────── */
 .tabular-nums { font-variant-numeric: tabular-nums; }
-.text-primary { color: #b70100 !important; }
+.text-primary { color: #334155 !important; }
 .text-secondary { color: #5f5e5e !important; }
-.gradient-primary { background: linear-gradient(135deg, #b70100 0%, #e60000 100%); }
+.gradient-primary { background: linear-gradient(135deg, #334155 0%, #475569 100%); }
 .ambient-shadow { box-shadow: 0 8px 32px 0 rgba(28, 27, 27, 0.06); }
 .msym {
     font-family: 'Material Symbols Outlined' !important;
@@ -743,10 +743,10 @@ def _render_nav():
     active = st.session_state.get("active_case_id")
 
     st.markdown("""
-    <div class="ubs-nav-bar">
-      <span class="ubs-nav-logo">UBS</span>
+    <div class="crews-nav-bar">
+      <span class="crews-nav-logo">CREWS</span>
       <div style="flex:1;"></div>
-      <span class="material-symbols-outlined ubs-nav-account" style="margin-left:1rem;">account_circle</span>
+      <span class="material-symbols-outlined crews-nav-account" style="margin-left:1rem;">account_circle</span>
     </div>
     """, unsafe_allow_html=True)
 

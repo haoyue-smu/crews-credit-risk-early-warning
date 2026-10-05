@@ -88,7 +88,7 @@ def build_case_context(case: dict) -> str:
         f"{narrative_txt}"
         "\n\n"
         "COMPLIANCE AND SCOPE CONSTRAINTS — MANDATORY:\n"
-        "- You are an internal credit risk analysis tool for authorised UBS analysts only.\n"
+        "- You are an internal credit risk analysis tool for authorised analysts of the lending institution only.\n"
         "- You MUST NOT provide investment advice, buy/sell/hold recommendations, "
         "or price/return/rating predictions.\n"
         "- You MUST NOT recommend any specific financial instrument, security, or credit action.\n"

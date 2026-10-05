@@ -1,0 +1,14 @@
+{
+  "_notice": "SYNTHETIC TEST DOCUMENT",
+  "_notice_detail": "Fabricated for conflict-resolution testing. Deliberately contradicts doc_001 and doc_003; Hyflux never issued this statement.",
+  "document_id": "doc_004",
+  "company_id": "hyflux",
+  "source_name": "synthetic (company statement style)",
+  "source_type": "web",
+  "published_date": "2018-05-10T00:00:00Z",
+  "fetched_date": "2018-05-11T00:00:00Z",
+  "url": "",
+  "full_text": "Hyflux Ltd's Investor Relations office issued a formal statement on 10 May 2018 addressing what it characterised as unfounded rumours circulating in certain media and online commentary. The company states categorically that Hyflux has not filed any formal application for court-supervised debt restructuring with the Singapore High Court, and that any suggestion that such a filing has been made is inaccurate. Hyflux emphasises that it is not party to insolvency proceedings of that nature and that official company records and regulatory channels contain no such filing. The statement rejects parallels drawn to scenarios described in speculative press reports and reiterates that the group's governance and disclosure practices remain aligned with listing rules.\n\nManagement reports that operations across Hyflux's desalination, water treatment, and related energy activities are running normally, with facilities meeting service commitments and commercial schedules. The company further confirms that all material payment obligations that have come due, including scheduled payments on its capital instruments, are being met in accordance with contractual terms. Hyflux attributes some external narratives to misunderstandings of ongoing refinancing and liquidity discussions, which it describes as routine engagement with advisers and financing partners rather than a response to payment failures or covenant stress.\n\nRegarding recent portfolio activity, Hyflux describes divestments and marketing of selected assets—including discussions around certain plant and infrastructure holdings—as part of a disciplined strategic portfolio optimisation programme. The objective, it says, is to sharpen focus on core capabilities and redeploy capital toward higher-return opportunities, not to conduct distress-driven fire sales or rushed disposals. While acknowledging heightened market speculation in recent weeks, Hyflux dismisses alarmist interpretations as unfounded and urges investors to rely solely on regulatory filings and official company announcements. The statement notes that voluntary capital-structure reviews are common for listed enterprises and do not imply court-supervised restructuring, default, or operational disruption.",
+  "language": "en",
+  "source_quality_score": 0.85
+}

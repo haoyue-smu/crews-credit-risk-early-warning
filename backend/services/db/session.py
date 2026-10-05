@@ -16,7 +16,7 @@ from sqlalchemy.orm import sessionmaker, Session
 
 from shared.config import settings
 
-_db_url = settings.database_url or "sqlite:///./data/ubs_credit.db"
+_db_url = settings.database_url or "sqlite:///./data/crews.db"
 
 # Ensure the data/ directory exists for SQLite
 if _db_url.startswith("sqlite:///./"):

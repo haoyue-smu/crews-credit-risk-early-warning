@@ -27,7 +27,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(
-    title="UBS Credit Assessment API",
+    title="CREWS Credit Risk Early Warning API",
     description=(
         "Agentic credit analysis platform — "
         "FIS (Financial Ingestion) + RS (Retrieval) + "
@@ -53,7 +53,7 @@ app.include_router(cases_router, prefix="/api")
 
 @app.get("/", tags=["health"])
 def root():
-    return {"status": "ok", "service": "UBS Credit Assessment API", "version": "0.3.0"}
+    return {"status": "ok", "service": "CREWS Credit Risk Early Warning API", "version": "0.3.0"}
 
 
 @app.get("/health", tags=["health"])

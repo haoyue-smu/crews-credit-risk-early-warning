@@ -62,8 +62,8 @@ with st.form("case_entry_form"):
         st.markdown(
             "<p style='font-size:0.75rem;color:#5f5e5e;padding-top:0.625rem;"
             "font-family:\"Inter\",sans-serif;line-height:1.5;'>"
-            "Data is encrypted and stored in accordance with UBS Global Compliance"
-            " standards for Institutional Data Handling."
+            "Uploaded documents are stored locally on this machine for analysis."
+            " Use public company filings only."
             "</p>",
             unsafe_allow_html=True,
         )
@@ -158,7 +158,7 @@ with st.container(border=True):
                             padding:0.75rem 1rem;background:#ffffff;
                             border-radius:0.5rem;margin-bottom:0.375rem;
                             box-shadow:0 2px 8px rgba(28,27,27,0.04);">
-                  <span class="material-symbols-outlined" style="color:#b70100;">description</span>
+                  <span class="material-symbols-outlined" style="color:#334155;">description</span>
                   <div style="flex:1;min-width:0;">
                     <div style="font-size:0.875rem;font-weight:600;color:#1c1b1b;
                                 white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
@@ -291,7 +291,7 @@ try:
                     '<span class="chip chip-primary" style="margin-left:0.25rem;font-size:0.5625rem;">active</span>'
                     if is_active else ""
                 )
-                border = "border-left:3px solid #b70100;" if is_active else "border-left:3px solid transparent;"
+                border = "border-left:3px solid #334155;" if is_active else "border-left:3px solid transparent;"
 
                 col_info, col_btn = st.columns([10, 1])
                 with col_info:

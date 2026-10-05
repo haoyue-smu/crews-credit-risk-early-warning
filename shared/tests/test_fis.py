@@ -5,13 +5,16 @@ Runs the full FIS pipeline against a dummy XML financial document:
   2. Compiles and invokes the FIS LangGraph
   3. Prints parsed statements, financial features, ratios, and Z-Score
 
-Requires: OPENROUTER_API_KEY set in .env
+Requires: OPENROUTER_API_KEY set in .env (makes live LLM calls).
+Marked ``integration`` and skipped when the key is not set.
 """
 
 import json
 import os
 import sys
 from datetime import datetime
+
+import pytest
 from dotenv import load_dotenv
 
 # Ensure project root is on path
@@ -28,9 +31,9 @@ load_dotenv()
 
 
 def create_test_xml() -> str:
-    """Returns path to dummy_financials.xml in project root."""
+    """Returns path to samples/dummy_financials.xml."""
     filepath = os.path.join(
-        os.path.dirname(__file__), "..", "..", "dummy_financials.xml"
+        os.path.dirname(__file__), "..", "..", "samples", "dummy_financials.xml"
     )
     filepath = os.path.abspath(filepath)
     if not os.path.exists(filepath):
@@ -41,6 +44,11 @@ def create_test_xml() -> str:
     return filepath
 
 
+@pytest.mark.integration
+@pytest.mark.skipif(
+    not os.getenv("OPENROUTER_API_KEY"),
+    reason="integration test: OPENROUTER_API_KEY not set",
+)
 def test_fis():
     print("=" * 60)
     print("FIS Integration Test")
@@ -177,9 +185,18 @@ def test_fis():
 
     except Exception as e:
         print(f"\nGraph execution failed: {e}")
-        import traceback
-        traceback.print_exc()
         print("\nDid you set OPENROUTER_API_KEY in the .env file?")
+        raise
+
+    # FIS reports fis_features_extracted even when parsing failed, so check the outputs.
+    assert updated_case.status == "fis_features_extracted", updated_case.status
+    assert any(
+        p.raw_statements and "fis_openrouter_error" not in p.parser_name
+        for p in updated_case.parsed_financial_documents
+    ), "no document parsed successfully"
+    ff = updated_case.financial_features
+    assert ff is not None and ff.current_z_score is not None, "no Z-Score computed"
+    assert ff.current_z_score.score is not None, ff.current_z_score
 
 
 if __name__ == "__main__":

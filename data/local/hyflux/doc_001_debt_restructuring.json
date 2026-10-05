@@ -1,0 +1,14 @@
+{
+  "_notice": "SYNTHETIC TEST DOCUMENT",
+  "_notice_detail": "Written for pipeline testing. Not a real article, review or company statement; it loosely paraphrases publicly reported 2018 events about Hyflux Ltd.",
+  "document_id": "doc_001",
+  "company_id": "hyflux",
+  "source_name": "synthetic (news style)",
+  "source_type": "news",
+  "published_date": "2018-05-15T00:00:00Z",
+  "fetched_date": "2018-05-16T00:00:00Z",
+  "url": "",
+  "full_text": "Hyflux Ltd, which has been grappling with mounting liabilities and the fallout from its troubled projects, moved to seek court-supervised restructuring in Singapore in May 2018. Hyflux filed its application in May 2018 to the Singapore High Court under Section 211B for a court-supervised debt restructuring. The company said the application was intended to give it time and structure to manage creditors while it reviewed options for refinancing and asset recoveries.\n\nThe restructuring application also landed at a difficult moment for the company's capital structure. The filing showed Hyflux had defaulted on the S$14.9 million perpetual securities interest payment due at the time. Investors had been watching closely for signs of stress in Hyflux's funding stack, particularly after losses in parts of its energy and water-related businesses.\n\nSeparately, the bankable value of Hyflux's equity had deteriorated sharply. Hyflux's market value, which had once peaked near S$2.1 billion, had since fallen to about S$165 million. Analysts pointed to how quickly sentiment shifted following disclosures on funding pressures, project delays, and the credibility of turnaround timelines.\n\nIndustry observers said the next steps would hinge on the court process and whether creditors could align on a workable restructuring plan. If approved, the timetable would allow the company to propose arrangements while it continued to engage stakeholders on possible liquidity measures and asset dispositions.",
+  "language": "en",
+  "source_quality_score": 0.92
+}

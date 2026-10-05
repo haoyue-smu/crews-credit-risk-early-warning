@@ -99,7 +99,7 @@ def _stage_top_color(status: str, prefix: str) -> str:
     if _stage_is_done(status, prefix):
         return "#15803d"
     if f"{prefix}_error" in status:
-        return "#b70100"
+        return "#b91c1c"
     if f"{prefix}_running" in status or f"{prefix}_started" in status:
         return "#2563eb"
     return "#eae7e7"
@@ -107,8 +107,8 @@ def _stage_top_color(status: str, prefix: str) -> str:
 
 # ── Renderers for live-updating slots ─────────────────────────────────────────
 def _render_circle_svg(pct: float, tl, status: str) -> str:
-    _TL_STROKE = {"green": "#15803d", "amber": "#d97706", "red": "#b70100"}
-    stroke_color = _TL_STROKE.get(tl or "", "#b70100")
+    _TL_STROKE = {"green": "#15803d", "amber": "#d97706", "red": "#b91c1c"}
+    stroke_color = _TL_STROKE.get(tl or "", "#b91c1c")
     pct_int      = int(pct * 100)
     dashoffset   = 880 * (1 - pct)
     sub_label    = tl.upper() if tl else status.replace("_", " ").upper()
@@ -149,7 +149,7 @@ def _render_stage_cards(status: str) -> str:
             margin-bottom:0.75rem;border-top:3px solid {top_color};">
   <div style="display:flex;align-items:center;justify-content:space-between;
               margin-bottom:0.75rem;">
-    <span class="material-symbols-outlined" style="color:#b70100;">{icon}</span>
+    <span class="material-symbols-outlined" style="color:#334155;">{icon}</span>
     {chip}
   </div>
   <div style="font-family:'Manrope',sans-serif;font-weight:700;font-size:0.9375rem;
@@ -159,7 +159,7 @@ def _render_stage_cards(status: str) -> str:
   </div>
   <div style="height:3px;background:#eae7e7;border-radius:9999px;overflow:hidden;">
     <div style="height:100%;width:{int(prog_frac*100)}%;
-                background:linear-gradient(135deg,#b70100,#e60000);
+                background:linear-gradient(135deg,#334155,#475569);
                 border-radius:9999px;"></div>
   </div>
 </div>
@@ -169,7 +169,7 @@ def _render_stage_cards(status: str) -> str:
 
 def _render_terminal(audit_log: list) -> str:
     _BADGE_COLOR = {
-        "fis": ("#b70100", "INIT"),
+        "fis": ("#94a3b8", "INIT"),
         "rs":  ("#60a5fa", "RETRIEVE"),
         "sis": ("#4ade80", "COMPUTE"),
         "frd": ("#eab308", "QUERY"),
@@ -201,7 +201,7 @@ def _render_terminal(audit_log: list) -> str:
     return f"""
 <div class="terminal-card">
   <div class="terminal-header">
-    <span class="material-symbols-outlined" style="color:#b70100;font-size:1rem;">terminal</span>
+    <span class="material-symbols-outlined" style="color:#334155;font-size:1rem;">terminal</span>
     <span style="font-size:0.625rem;font-weight:700;text-transform:uppercase;
                  letter-spacing:0.15em;">Process_Kernel_V4.0</span>
   </div>
@@ -249,7 +249,7 @@ with left_col:
     <h1 style="font-family:'Manrope',sans-serif;font-size:3rem;font-weight:800;
                letter-spacing:-0.04em;color:#1c1b1b;line-height:1.05;margin-bottom:1rem;">
       Credit Risk Assessment
-      <span style="color:#b70100;">{active_case}</span>
+      <span style="color:#334155;">{active_case}</span>
     </h1>
     <p style="color:#5f5e5e;font-size:1.0625rem;line-height:1.65;max-width:560px;
               margin-bottom:1.75rem;">
@@ -412,7 +412,7 @@ if triggered:
         if resp.status_code == 200:
             poll_status_slot.markdown(_html(f"""
             <div style="font-family:'Manrope',sans-serif;font-size:0.9375rem;
-                        font-weight:600;color:#b70100;margin-bottom:0.5rem;">
+                        font-weight:600;color:#334155;margin-bottom:0.5rem;">
               {label} started — polling for completion…
             </div>
             """), unsafe_allow_html=True)
@@ -423,7 +423,7 @@ if triggered:
                     f'<div style="width:100%;background:#eae7e7;border-radius:9999px;'
                     f'height:6px;overflow:hidden;margin-bottom:0.75rem;">'
                     f'<div style="width:{w}%;height:100%;border-radius:9999px;'
-                    f'background:linear-gradient(135deg,#b70100,#e60000);'
+                    f'background:linear-gradient(135deg,#334155,#475569);'
                     f'transition:width 0.4s ease;"></div></div>'
                 )
 

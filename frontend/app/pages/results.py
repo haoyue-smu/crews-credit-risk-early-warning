@@ -59,11 +59,11 @@ def _fmt(val, fmt=".2f", fallback="—"):
         return fallback
 
 
-_TL_COLOR = {"green": "#15803d", "amber": "#d97706", "red": "#b70100"}
+_TL_COLOR = {"green": "#15803d", "amber": "#d97706", "red": "#b91c1c"}
 _TL_LABEL = {"green": "Low Risk",      "amber": "Moderate Risk", "red": "High Risk"}
 _TL_BG    = {"green": "rgba(21,128,61,0.08)",
              "amber": "rgba(180,120,0,0.08)",
-             "red":   "rgba(183,1,0,0.08)"}
+             "red":   "rgba(185,28,28,0.08)"}
 
 tl_color = _TL_COLOR.get(tl or "", "#5f5e5e")
 tl_label = _TL_LABEL.get(tl or "", "Not Assessed")
@@ -170,7 +170,7 @@ left_col, right_col = st.columns([1, 1], gap="large")
 with left_col:
     st.markdown(_html("""
     <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;">
-      <span class="msym" style="color:#b70100;">analytics</span>
+      <span class="msym" style="color:#334155;">analytics</span>
       <h3 style="font-family:'Manrope',sans-serif;font-size:1.5rem;font-weight:700;
                  letter-spacing:-0.02em;color:#1c1b1b;margin:0;">Quantitative Analysis</h3>
     </div>
@@ -184,13 +184,13 @@ with left_col:
     z_score   = zs.get("score")
     z_zone    = zs.get("zone", "unknown")
     z_formula = zs.get("formula_used", "")
-    z_color   = {"safe": "#15803d", "grey": "#d97706", "distress": "#b70100"}.get(
+    z_color   = {"safe": "#15803d", "grey": "#d97706", "distress": "#b91c1c"}.get(
         z_zone, "#5f5e5e"
     )
     zone_chip_colors = {
         "safe":     ("rgba(21,128,61,0.08)", "#15803d"),
         "grey":     ("rgba(217,119,6,0.08)", "#d97706"),
-        "distress": ("rgba(183,1,0,0.08)",   "#b70100"),
+        "distress": ("rgba(185,28,28,0.08)",   "#b91c1c"),
     }
     zc_bg, zc_fg = zone_chip_colors.get(z_zone, ("rgba(95,94,94,0.08)", "#5f5e5e"))
 
@@ -267,7 +267,7 @@ with left_col:
 with right_col:
     st.markdown(_html("""
     <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;">
-      <span class="msym" style="color:#b70100;">neurology</span>
+      <span class="msym" style="color:#334155;">neurology</span>
       <h3 style="font-family:'Manrope',sans-serif;font-size:1.5rem;font-weight:700;
                  letter-spacing:-0.02em;color:#1c1b1b;margin:0;">Qualitative Assessment</h3>
     </div>
@@ -296,9 +296,9 @@ with right_col:
 
         _icon = {"high": "warning", "medium": "info", "low": "circle",
                  "positive": "gavel"}
-        _border = {"high": "#b70100", "medium": "#d97706",
+        _border = {"high": "#b91c1c", "medium": "#d97706",
                    "low": "#5f5e5e", "positive": "#15803d"}
-        _icon_color = {"high": "#b70100", "medium": "#d97706",
+        _icon_color = {"high": "#b91c1c", "medium": "#d97706",
                        "low": "#5f5e5e", "positive": "#15803d"}
 
         for sig in sorted_sigs[:6]:
@@ -440,7 +440,7 @@ if frd_data:
         with st.expander("Risk flags"):
             for f in flags:
                 st.markdown(
-                    f'<div style="font-size:0.875rem;color:#b70100;padding:3px 0;">▸ {f}</div>',
+                    f'<div style="font-size:0.875rem;color:#b91c1c;padding:3px 0;">▸ {f}</div>',
                     unsafe_allow_html=True)
 
     if mit:
@@ -482,7 +482,7 @@ st.markdown("<div class='atelier-hr'></div>", unsafe_allow_html=True)
 
 st.markdown("""
 <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.25rem;">
-  <span class="material-symbols-outlined" style="color:#b70100;">auto_awesome</span>
+  <span class="material-symbols-outlined" style="color:#334155;">auto_awesome</span>
   <div class="section-label-text">Credit Intelligence Assistant</div>
   <span class="chip chip-green" style="font-size:0.5625rem;margin-left:auto;">ONLINE</span>
 </div>
@@ -542,7 +542,7 @@ for msg in chat_history:
         margin = "margin-left:3rem;"
     else:
         avatar_html = (
-            '<div style="width:2rem;height:2rem;border-radius:9999px;background:#b70100;'
+            '<div style="width:2rem;height:2rem;border-radius:9999px;background:#334155;'
             'display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
             '<svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 96 960 960" width="18" fill="#ffffff">'
             '<path d="M160 816v-460q0-24 18-42t42-18h520q24 0 42 18t18 42v320q0 24-18 42t-42 18H240L160 816Zm260-195h40v-80h80v-40h-80v-80h-40v80h-80v40h80v80Z"/>'

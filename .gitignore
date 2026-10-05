@@ -217,3 +217,11 @@ marimo/_lsp/
 __marimo__/
 SIS_Project_Reference_V*.md
 step*.txt
+
+# CREWS local runtime data (never commit)
+data/*.db
+data/uploads/
+
+# Local tooling
+.claude/
+llm/

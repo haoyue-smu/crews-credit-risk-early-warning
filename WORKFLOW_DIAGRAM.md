@@ -1,4 +1,4 @@
-# UBS Credit Assessment — Agentic Workflow Diagram
+# CREWS — Agentic Workflow Diagram
 
 ## Full Pipeline Overview
 
@@ -22,11 +22,11 @@ flowchart TD
 
     subgraph RS_SUB["RS — Retrieval Subgraph (async)"]
         direction LR
-        RS1[plan_retrieval\nLLM: generate queries\nfor 8 topics]
+        RS1[plan_retrieval\nLLM: generate queries\nfor 8 default topics]
         RS2[execute_searches\nTavily API\nasync parallel]
         RS3[normalize_and_dedup\nDeduplicate by URL hash]
-        RS4[relevance_filter\nLLM batch: score 0–1\ndrop below 0.3]
-        RS5{coverage_gate\nAll 8 topics covered?}
+        RS4[relevance_filter\nLLM batch: score 0–1\ndrop below 0.5]
+        RS5{coverage_gate\nAll required topics covered?}
         RS6[retrieval_retry\nLLM: new queries for\nmissing topics, max 2×]
         RS7[source_quality_assessment\nScore credibility]
         RS1 --> RS2 --> RS3 --> RS4 --> RS5
@@ -95,9 +95,11 @@ flowchart TD
     DB -->|read CaseState| RS1
 
     RS1["🗺️ plan_retrieval
-    • LLM generates queries for 8 topics:
-      financials, legal, management, market,
-      credit_events, macro, esg, positive_signals
+    • LLM generates queries for 8 default topics:
+      governance, financials, legal_regulatory,
+      market_position, management, controversy,
+      competition, environmental
+      (LLM may add custom topics, e.g. supply_chain_risk)
     • Creates RetrievalQuery objects"]
 
     RS2["🌐 execute_searches
@@ -111,10 +113,10 @@ flowchart TD
 
     RS4["🎯 relevance_filter
     • LLM batch score 0–1 per item
-    • Drop items < 0.3 relevance"]
+    • Drop items < 0.5 relevance"]
 
     RS5{{"coverage_gate
-    8 topics covered?"}}
+    required topics covered?"}}
 
     RS6["🔄 retrieval_retry
     • LLM: targeted queries for
@@ -145,7 +147,8 @@ flowchart TD
     SIS2["✅ validate
     • Pydantic schema check
     • Char interval verification
-    • Retry if >30% fail (max 2×)"]
+    • >30% failures: flag doc for re-extraction
+      (max 2×; logged, not re-run yet)"]
 
     SIS3["🔬 verify
     • Parallel LLM (ThreadPool, 10 workers)
@@ -154,6 +157,7 @@ flowchart TD
 
     SIS4["⚖️ conflict
     Stage 1: Cross-doc dedup (deterministic)
+    Stage 1.5: Embedding pre-filter (cosine < 0.15 skipped)
     Stage 2: NLI screen (CrossEncoder)
     Stage 3: LLM confirm (parallel)
     → duplicate / contradiction / related / unrelated"]
@@ -185,16 +189,19 @@ flowchart TD
       B4: peer anomaly
     ──────────────────────────
     Traffic Light Logic:
-    🔴 Red   = ≥1 high-weight OR ≥3 medium
-    🟡 Amber = ≥1 medium OR ≥3 low
-    🟢 Green = default / mitigating downgrade"]
+    🔴 Red   = ≥2 high-weight OR ≥3 medium
+    🟡 Amber = 1 high OR ≥1 medium OR ≥3 low
+    🟢 Green = default
+    Mitigation (positive avg conf ≥ 0.65):
+      Red → Amber if ≤2 high; Amber → Green"]
 
     FRD3["📝 generate_report
     • LLM narrative (Gemini, temp 0.3)
     • Sections: executive_summary,
       key_risk_findings, financial_health,
-      signal_details, disputed_signals,
-      data_quality_notes, recommended_actions
+      signal_details, disputed_and_ambiguous,
+      data_quality_notes, recommended_actions,
+      disclaimer (fixed text)
     • Analyst guidance injection"]
 
     FRD1 --> FRD2 --> FRD3

@@ -1,4 +1,4 @@
-"""LangGraph state definitions for the UBS credit assessment pipeline.
+"""LangGraph state definitions for the CREWS credit risk early warning pipeline.
 
 Two separate state schemas exist because FIS/RS and SIS/FRD were built independently:
 

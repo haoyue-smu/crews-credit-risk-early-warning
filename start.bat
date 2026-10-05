@@ -1,7 +1,7 @@
 @echo off
 cd /d "%~dp0"
 
-echo Starting UBS Credit Assessment...
+echo Starting CREWS (Credit Risk Early Warning System)...
 echo.
 
 :: Start backend in a new window

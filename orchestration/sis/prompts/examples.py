@@ -35,7 +35,7 @@ def get_sis_example_data() -> list["lx.data.ExampleData"]:
         )
 
     # Example A (doc_001): financial distress signals.
-    text_001 = _load_hyflux_doc_full_text("doc_001_reuters_debt_restructuring.json")
+    text_001 = _load_hyflux_doc_full_text("doc_001_debt_restructuring.json")
     debt_restructuring_text = (
         "Hyflux filed its application in May 2018 to the Singapore High Court under Section 211B for a court-supervised debt restructuring."
     )
@@ -66,7 +66,7 @@ def get_sis_example_data() -> list["lx.data.ExampleData"]:
     )
 
     # Example B (doc_002): reputation/sentiment + management governance.
-    text_002 = _load_hyflux_doc_full_text("doc_002_glassdoor_employee_reviews.json")
+    text_002 = _load_hyflux_doc_full_text("doc_002_employee_reviews.json")
     employee_satisfaction_decline_text = (
         "Employee Review Excerpt 1 (Feb 2018): Morale at Hyflux has been low for months."
     )

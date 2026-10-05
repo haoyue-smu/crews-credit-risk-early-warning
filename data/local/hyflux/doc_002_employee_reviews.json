@@ -1,0 +1,14 @@
+{
+  "_notice": "SYNTHETIC TEST DOCUMENT",
+  "_notice_detail": "Written for pipeline testing. Not a real article, review or company statement; it loosely paraphrases publicly reported 2018 events about Hyflux Ltd.",
+  "document_id": "doc_002",
+  "company_id": "hyflux",
+  "source_name": "synthetic (employee review style)",
+  "source_type": "forum",
+  "published_date": "2018-03-20T00:00:00Z",
+  "fetched_date": "2018-03-21T00:00:00Z",
+  "url": "",
+  "full_text": "Employee Review Excerpt 1 (Feb 2018): Morale at Hyflux has been low for months. Management's direction feels uncertain, and people are worried about the company's future. Several teams say they are holding back work until decisions are clarified.\n\nEmployee Review Excerpt 2 (Mar 2018): There is a lot of management uncertainty. Project timelines keep slipping because priorities change, and delayed projects are blamed on leadership rather than execution. Employees describe a sense of \"waiting for the next announcement.\"\n\nEmployee Review Excerpt 3 (Apr 2018): Low morale shows in day-to-day collaboration. People are concerned the company will not recover, and the lack of clarity around turnaround plans affects engagement. Work feels more reactive than strategic.\n\nEmployee Review Excerpt 4 (May 2018): Several initiatives have been postponed repeatedly, including key deliverables that were supposed to start earlier in the year. Many employees feel the organization is stretched thin and that future plans remain unclear.",
+  "language": "en",
+  "source_quality_score": 0.45
+}

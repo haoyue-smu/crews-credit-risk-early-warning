@@ -1,0 +1,14 @@
+{
+  "_notice": "SYNTHETIC TEST DOCUMENT",
+  "_notice_detail": "Written for pipeline testing. Not a real article, review or company statement; it loosely paraphrases publicly reported 2018 events about Hyflux Ltd.",
+  "document_id": "doc_003",
+  "company_id": "hyflux",
+  "source_name": "synthetic (news style)",
+  "source_type": "news",
+  "published_date": "2018-06-05T00:00:00Z",
+  "fetched_date": "2018-06-06T00:00:00Z",
+  "url": "",
+  "full_text": "Hyflux's Tuaspring desalination plant has struggled to attract a buyer, with market players pointing to the timing of the search and the changing economics of energy inputs. The company said that delays in finding a buyer had prolonged uncertainty over who would take over the plant's operating obligations, extending the period during which financing costs and upkeep continued to weigh on its balance sheet.\n\nEnergy market conditions have also added pressure to the economics of desalination-linked power generation. Oversupply of gas has been depressing electricity prices, making it harder for energy-related businesses tied to Hyflux's wider operations to remain profitable in the short term. Industry analysts said the cost and revenue mismatch could persist until supply and demand rebalance.\n\nAs a result, Hyflux reported continued losses from its energy business and related activities, compounding stress on the wider corporate group. Even as discussions for asset dispositions continued, delays and weak pricing conditions reduced the likelihood of near-term cash generation that could support restructuring efforts.\n\nIt's understood that potential buyers and counterparties have taken a cautious stance, preferring more clarity on contractual terms and timeline before proceeding. For Hyflux, the sale process has become a key variable in any effort to stabilize liquidity and rebuild investor confidence.",
+  "language": "en",
+  "source_quality_score": 0.85
+}
